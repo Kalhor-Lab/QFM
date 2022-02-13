@@ -1,0 +1,13 @@
+#!/bin/bash
+#SBATCH --job-name=G1T6A9
+#SBATCH -p shared
+#SBATCH -t 0-0:0:19
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=200mb
+#SBATCH -o G1T6A9-%j.out
+#SBATCH -e G1T6A9-%j.err
+#SBATCH --mail-type=FAIL
+#SBATCH --mail-use=kalhor@jhu.edu
+perl -w 170530_genotype1_PB.pl ../0-raw_data_PB/G1T6A9-CB12C24-295409122_S49_L001_R1_001.fastq
