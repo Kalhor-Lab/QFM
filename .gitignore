@@ -1,3 +1,7 @@
+R_deprecated/
+plots/
+*.rds
+
 # History files
 .Rhistory
 .Rapp.history
