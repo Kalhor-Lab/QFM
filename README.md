@@ -1,14 +1,18 @@
 # Quantitative Fate Mapping (QFM) via retrospective lineage barcodes
 
 Quick start:
-To run ICE_FASE
+To install:
+```
+devtools::install_github("Kalhor-Lab/QFM")
+```
+To run ICE_FASE:
 ```
 result = ice_fase(cell_mat,
                   sc_celltypes,
                   total_time,
                   root_time)
 ```
-To run Phylotime
+To run Phylotime:
 ```
 tr = phylotime(cell_mat,
                total_time)
