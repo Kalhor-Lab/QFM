@@ -1,0 +1,42 @@
+Package: qfm
+Type: Package
+Title: Quantitative Fate Mapping with ICE-FASE and Phylotime
+Version: 0.1.0
+Author: Weixiang Fang
+Maintainer: Weixiang Fang <wfang58@gmail.com>
+Description: Inference of quantitaive fate map from retrospective lineage barcode. Phylotime reconstructs time-scaled phylogeny from lineage barcodes. Given terminal cell types, ICE-FASE infers a quantitative fate map.
+License: MIT
+Encoding: UTF-8
+LazyData: true
+Depends:
+        R (>= 4.0.4)
+Imports:
+        readr (>= 1.4.0),
+        dplyr (>= 1.0.5),
+        purrr (>= 0.3.4),
+        tidyr (>= 1.1.3),
+        ggplot2 (>= 3.3.3),
+        stringr (>= 1.4.0),
+        assertthat (>= 0.2.1),
+        ape (>= 5.4-1),
+        rootSolve (>= 1.8.2.1),
+        ggraph (>= 2.0.5),
+        igraph (>= 1.2.6),
+        ComplexHeatmap (>= 2.6.2),
+        RColorBrewer (>= 1.1-2),
+        extraDistr (>= 1.9.1),
+        matrixStats (>= 0.58.0),
+        data.table (>= 1.14.0),
+        patchwork (>= 1.1.1),
+        ggpubr (>= 0.4.0),
+        conflicted (>= 1.1.0),
+        circlize (>= 0.4.12),
+        furrr (>= 0.2.2),
+        future (>= 1.21.0),
+        xgboost (>= 1.3.2.1),
+        Matrix (>= 1.3-4),
+        scales (>= 1.1.1),
+        phangorn (>= 2.5.5),
+        phylogram (>= 2.1.0),
+        Biostrings (>= 2.58.0)
+RoxygenNote: 7.1.1
