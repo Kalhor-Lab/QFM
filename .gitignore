@@ -1,6 +1,8 @@
 R_deprecated/
 plots/
+intermediate_data/panel/tr3/
 *.rds
+*.rda
 
 # History files
 .Rhistory

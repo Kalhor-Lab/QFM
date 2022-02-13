@@ -1,2 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+supplementary_data
+data
+metadata
+R_deprecated
+intermediate_data
