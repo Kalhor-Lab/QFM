@@ -65,11 +65,16 @@ dump_trees <- function(tree_list, output_dir, suffix = "") {
                 }
         }
 }
-dump_mut_p <- function(mut_p, output_dir) {
+dump_mut_p <- function(mut_p, output_dir, zip_data = T) {
         for (i in 1:length(mut_p$recur_vec_list)) {
-                write(mut_p$recur_vec_list[[i]], file = file.path(output_dir,
-                                                                  paste0("element", stringr::str_pad(i, width = 4, pad = "0"),
-                                                                         "_allele_prob.txt")), ncolumns = 1)
+                file_path = file.path(output_dir,
+                                      paste0("element", stringr::str_pad(i, width = 4, pad = "0"),
+                                             "_allele_prob.txt"))
+                write(mut_p$recur_vec_list[[i]], file = file_path, ncolumns = 1)
+                if (zip_data) {
+                        zip(paste0(file_path, ".zip"), file_path)
+                        file.remove(file_path)
+                }
         }
         write(mut_p$mut_rate, file = file.path(output_dir, "mut_rate.txt"), ncolumns = 1)
 }
