@@ -1,6 +1,8 @@
 R_deprecated/
 plots/
 intermediate_data/panel/tr3/
+data/
+supplementary_data/
 *.rds
 *.rda
 
