@@ -117,7 +117,7 @@ g2_mr_vec[colnames(cell_mat_g2_fil) == "GCCAAAAGCT"] = estimate_mut_rate(all_cel
 
 # reading indelphi predicted probabilities
 Biostrings::reverseComplement(DNAString("ATCTAACCGA"))
-idelphi_tb = read_tsv("./data/iPSC/iPSC_indelphi_result_summary.txt")
+idelphi_tb = read_tsv("./supplementary_data/supplementary_data_3_inDelphi_predictions/iPSC_indelphi_result.zip")
 idelphi_tb = idelphi_tb %>% nest(data = -ID)
 idelphi_tb$ID = map_chr(idelphi_tb$ID, function(x) {
         as.character(Biostrings::reverseComplement(DNAString(x)))

@@ -81,6 +81,8 @@ b3 = plot_barcodes(sc_mat = exp_params$sc[[j]],
                   show_heatmap_legend = F)
 push_png(b, "barcode_tr", dir = plot_dir, w = 4, h = 6)
 
+sc_data0 = simulate_sc_data(well_graph0, mut_p_g1, sample_size)
+
 tr = tr
 g_tr = as.igraph(tr)
 tr_node_time = node.depth.edgelength(tr) + 0.6

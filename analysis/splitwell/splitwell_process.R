@@ -534,6 +534,7 @@ library(circlize)
 col_func = colorRamp2(breaks = c(-3.2, -2.2, -1, 0, 0.5), colors = c( "#325288", "#325288", "#ffdf6b", "#a20a0a", "#a20a0a"))
 id_col = col_func(log10(pmax(mr_tb$mr, 1e-4)))
 names(id_col) = mr_tb$hgRNA
+mr_tb = filter(mr_tb, !(hgRNA %in% c("CGAAAATAGT", "GCAAGTGAGT", "TGGTCAACAA", "TTAATAGACC")))
 
 # Supplementary Figure
 gather(mr_tb[1:5], key = "Day", value = "Percent", -c(hgRNA)) %>%

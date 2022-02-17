@@ -413,10 +413,11 @@ qplot((eval_tb_plot$gr_node_size_in / node_collect_size),
 
 # histogram for node assignment accuracy per experiment
 node_assign_raw = bind_rows(evaluate_node_assign(exp_params, all_graphs, tr_col = "tr", gr_col = "gr"))
-node_assign_raw %>%
-  group_by(j) %>%
-  summarise(accuracy = mean(correct)) %>%
-  gghistogram(x = "accuracy", fill = "#1572A1", color = NA)
+saveRDS(node_assign_raw, file = "./intermediate_data/panel/exp_node_assign.rds")
+node_assign_accracy = node_assign_raw %>%
+        group_by(j) %>%
+        summarise(accuracy = mean(correct)) %>%
+        gghistogram(x = "accuracy", fill = "#1572A1", color = NA)
 
 # further evaluations of node assignments and sampling fraction (unused)
 # node_assign_tb = bind_rows(evaluate_node_assign(exp_params, all_graphs, tr_col = "tr", gr_col = "gr"))

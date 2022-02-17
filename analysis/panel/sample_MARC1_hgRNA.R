@@ -1,4 +1,4 @@
-source("analysis/load_MARC1_data.R")
+source("analysis/MARC1/load_MARC1_data.R")
 # sample fast and mid hgRNAs
 id_prob = readRDS("./intermediate_data/MARC1_id_prob.rds")
 # indelphi predictied allele probabilities

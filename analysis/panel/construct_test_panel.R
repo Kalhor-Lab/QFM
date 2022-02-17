@@ -1,4 +1,4 @@
-source("analysis/sample_MARC1_hgRNA.R")
+source("analysis/panel/sample_MARC1_hgRNA.R")
 
 sample_node_ranking <- function(gr) {
         list_out = list_dd_and_tips(name_nodes(gr))
@@ -199,51 +199,58 @@ graph_list_all = map(c(16, 32, 64), function(num_tip) {
 graph_list_all = reduce(graph_list_all, c)
 saveRDS(graph_list_all, file = paste0(output_dir, "all_graphs.rds"))
 
+# there are two graphs that didn't produce simulations, debug now
+all_graphs = readRDS(paste0(output_dir, "all_graphs.rds"))
+
 # simulating the experiments
 library(furrr)
 plan(multisession, workers = 12)
 graph_list_all = readRDS(paste0(output_dir, "all_graphs.rds"))
 exp_params = expand.grid(big_graph_id = 1:length(graph_list_all),
                          sample_size = c(100),
-                         num_element = c(100),
+                         num_element = c(50),
                          sampling = c("fixed", "proportional"),
-                         i_sim = 1:2) %>% as_tibble()
+                         i_sim = 1:10) %>% as_tibble()
+# zero  population sizes were produced in some cases
+exp_params = exp_params[!exp_params$big_graph_id %in% c(84, 102), ]
 exp_params = mutate(exp_params, mut_p = map(num_element, function(i) {
         sample_mutp_mid_or_fast(i, c(0.6, 15.0))
 }))
-saveRDS(exp_params, file = paste0(output_dir, "exp_data.rds"))
+saveRDS(exp_params, file = paste0(output_dir, "exp_data_10rep.rds"))
 
-# library(furrr)
-# plan(multisession, workers = 12)
-# rep_dir = paste0(output_dir, "exp_data_rep2/")
-# dir.create(rep_dir)
+library(furrr)
+plan(multisession, workers = 6)
+rep_dir = paste0(output_dir, "exp_data_10rep/")
+dir.create(rep_dir)
 # future_walk(1:nrow(exp_params), function(i) {
-#         big_graph_id = exp_params$big_graph_id[i]
-#         sample_size = exp_params$sample_size[i]
-#         mut_p = exp_params$mut_p[[i]]
-#         sampling = exp_params$sampling[i]
-#
-#         if (sampling == "fixed") {
-#                 ss = sample_size
-#         }
-#         if (sampling == "proportional") {
-#                 fm = graph_list_all[[big_graph_id]]
-#                 gens0 = make_gens(fm)
-#                 tip_size = map_dbl(gens0[fm$tip_id], "end_count")
-#                 tip_sample = extraDistr::rmvhyper(nn = 1, k = length(fm$tip_id) * sample_size, n = tip_size)[1, ]
-#                 tip_sample = pmax(tip_sample, 5)
-#                 names(tip_sample) = fm$tip_id
-#                 ss = tip_sample
-#         }
-#         out_file = paste0(rep_dir, str_pad(i, width = 4, pad = "0"), ".rds")
-#         if (!file.exists(out_file)) {
-#                 try({
-#                         out = simulate_sc_data(graph_list_all[[big_graph_id]], mut_p, sample_size = ss)
-#                         saveRDS(out, file = out_file)
-#                 })
-#         }
-# }, .progress = T, .options = furrr_options(seed = T))
-#
+future_walk(1:500, function(i) {
+        big_graph_id = exp_params$big_graph_id[i]
+        sample_size = exp_params$sample_size[i]
+        mut_p = exp_params$mut_p[[i]]
+        sampling = exp_params$sampling[i]
+
+        if (sampling == "fixed") {
+                ss = sample_size
+        }
+        if (sampling == "proportional") {
+                fm = graph_list_all[[big_graph_id]]
+                gens0 = make_gens(fm)
+                tip_size = map_dbl(gens0[fm$tip_id], "end_count")
+                tip_sample = extraDistr::rmvhyper(nn = 1, k = length(fm$tip_id) * sample_size, n = tip_size)[1, ]
+                tip_sample = pmax(tip_sample, 5)
+                names(tip_sample) = fm$tip_id
+                ss = tip_sample
+        }
+        out_file = paste0(rep_dir, stringr::str_pad(i, width = 4, pad = "0"), ".rds")
+        if (!file.exists(out_file)) {
+                try({
+                        out = simulate_sc_data(graph_list_all[[big_graph_id]], mut_p, sample_size = ss)
+                        saveRDS(out, file = out_file)
+                })
+        }
+}, .progress = T, .options = furrr_options(seed = T))
+
+
 # out_files = map_chr(1:nrow(exp_params), function(i) {
 #         out_file = paste0(rep_dir, str_pad(i, width = 4, pad = "0"), ".rds")
 #         out_file
@@ -267,7 +274,8 @@ saveRDS(exp_params, file = paste0(output_dir, "exp_data.rds"))
 # }, .progress = T, .options = furrr_options(seed = T)))
 
 
-exp_params = readRDS(paste0(output_dir, "exp_data.rds"))
+# exp_params = readRDS(paste0(output_dir, "exp_data.rds"))
+exp_params = readRDS(paste0(output_dir, "exp_data_rep1_2_proc2.rds"))
 all_graphs = readRDS(paste0(output_dir, "all_graphs.rds"))
 
 exp_params = exp_params %>% mutate(sc = map(data, "sc"))

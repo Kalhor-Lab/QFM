@@ -3,7 +3,7 @@ library(ggpubr)
 library(patchwork)
 
 # process mouse embryo time course and compare it to simulated results
-source("analysis/load_MARC1_data.R")
+source("./analysis/MARC1/load_MARC1_data.R")
 
 sim_obs_col = c("Simulated" = "#bd00ff",
                 "Unobserved" = "#a0937d",
