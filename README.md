@@ -19,6 +19,6 @@ tr = phylotime(cell_mat,
 ```
 
 To reproduce results in manuscript:
-  1. MARC1 estimations
-  2. Evaluation of ICE_FASE and Phylotime on simulation of panel of fate maps
-  3. Process and analyze split well experiment
+  1. MARC1 estimations ('analysis/MARC1/')
+  2. Evaluation of ICE_FASE and Phylotime on simulation of panel of fate maps ('analysis/panel/')
+  3. Process and analyze split well experiment ('analysis/splitwell/')
