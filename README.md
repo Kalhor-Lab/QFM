@@ -5,18 +5,9 @@ To install:
 ```
 devtools::install_github("Kalhor-Lab/QFM")
 ```
-To run ICE_FASE:
-```
-result = ice_fase(cell_mat,
-                  sc_celltypes,
-                  total_time,
-                  root_time)
-```
-To run Phylotime:
-```
-tr = phylotime(cell_mat,
-               total_time)
-```
+
+For a basic tutorial, check out the vignette:
+https://kalhor-lab.github.io/QFM/
 
 To reproduce results in manuscript:
   1. MARC1 estimations ('analysis/MARC1/')
