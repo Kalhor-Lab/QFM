@@ -1,0 +1,108 @@
+---
+title: "basic_tutorial"
+author: "Weixiang Fang"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{basic_tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r setup, message=F, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(qfm)
+```
+
+### Read example data
+
+In this example, we demonstrate quantitative fate mapping on lineage barcode data measured with cell types. First, we apply Phylotime to reconstruct time-scaled phylogeny from lineage barcodes. Second, ICE-FASE is applied to extract parameters of progenitor population dynamics, including commitment times, progenitor population sizes and commitment biases.
+
+```{r, message=FALSE}
+# read mutant allele matrix
+cell_allele_table = readr::read_csv("../data/example/mutant_allele_matrix.csv")
+cell_allele_table[1:5]
+```
+
+### Running Phylotime
+The input to Phylotime is a character matrix, with rows corresponding to cells and columns corresponding to barcoding sites, tibble / data.frame are convert to a character matrix. The matrix needs to have rownames, which will be used as the names of the cells.
+
+Within each barcoding site (column), the same character denotes a unique mutant allele. The unmutated allele needs to be coded as the character "0". (zero) The user also needs to input the total amount of active barcoding time, which is the duration for which mutations are being actively generated.
+
+Phylotime estimates mutation rate from data provided and assumes a uniform allele emergence probability by default. More on how to set user-defined mutation parameters when prior information is available.
+
+By default, Phylotime uses future to parallel pairwise distance estimations, use plan to set up parallel method and number of workers. Alternatively, set 'parallel=F'.
+
+In this example, barcoding activates at 0.6 days, and samples are collected at 15 days.
+
+```{r}
+chr_mat = as.matrix(cell_allele_table[-c(1:2)])
+rownames(chr_mat) = cell_allele_table$cell
+
+library(furrr)
+plan(multisession, workers = 8)
+tr = phylotime(chr_mat[, 1:50], t_total = 15. - 0.6)
+```
+
+Now to visualize the reconstructed tree with the lineage barcodes:
+```{r}
+plot_barcodes(chr_mat[, 1:50], tr, show_column_names = F)
+```
+To plot the reconstrcuted tree only:
+```{r, fig.width=10, fig.height=5}
+plot_tr(tr,
+        end_alpha_terminal = 0.05,
+        edge_width_terminal = 0.02)
+```
+
+### Running ICE-FASE
+Next, to apply ICE-FASE, we need, in additional, the terminal cell state classifications. This is provided as a named vector, where the name correspond to cell names. We can visualzie the tree with terminal cell states:
+```{r}
+sc_celltypes = cell_allele_table$type
+names(sc_celltypes) = cell_allele_table$cell
+print(sc_celltypes[1:10])
+plot_barcodes(chr_mat[, 1:50], tr, tip_celltype = sc_celltypes, show_column_names = F)
+```
+
+To run ICE-FASE:  ('root_time' is the time until barcode activation.)
+```{r}
+res = ice_fase(tr, sc_celltypes, total_time = 15 - 0.6, root_time = 0.6)
+```
+
+### ICE-FASE results
+With ICE-FASE fitted, a number of progenitor states are identified as nodes in the fate map topology. For future visualizations, we set the color scheme for the progenitor and terminal states. A default color palette is generated. If you wish to set you own color scheme, use the 'palette' argument. The vector of colors corresponds to the vector `c(res$gr$node.label, res$gr$tip.label)`. For example, with 16 terminal states, 15 progenitor states were identified and 15 + 16 total colors need to be provided.
+```{r}
+res = set_color_palette(res)
+```
+
+We can plot the reconstructed fate map topology with commitment times now.
+Note that the inferred progenitor states (iP) are denoted as "Node-x" below.
+```{r, fig.width=10, fig.height=5}
+plot_gr(gr = res$gr,
+        total_time = 15,
+        gr_node_time = res$gr_trans_time,
+        type_col = res$col_pal)
+```
+
+To visualize the internal node state assignment in reconstructed phylogeny:
+```{r, fig.width=10, fig.height=5}
+plot_tr(res$tr,
+        node_types = res$tr_node_assign,
+        type_col = res$col_pal,
+        end_alpha_terminal = 0.05,
+        edge_width_terminal = 0.02)
+```
+To visualize distribution of Inferred Commitment Event (ICE) times:
+```{r}
+plot_ice_times(res)
+```
+
+To visualize progenitor population sizes:
+```{r}
+plot_node_sizes(res)
+```
+
+Finally, we can get a summary table for the progenitor state estimates:
+```{r}
+output_estimates(res)
+```
