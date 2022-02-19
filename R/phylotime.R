@@ -132,29 +132,33 @@ estimate_mut_p <- function(sc_mat, t_total) {
         list(mut_rate = estimate_mut_rate(sc_mat, t_total),
              recur_vec_list = default_allele_prob(sc_mat))
 }
-phylotime_single_core <- function(sc_mat, t_total, mut_p = NULL, return_dist = F) {
-        if (is.null(mut_p)) {
-                mut_p = estimate_mut_p(sc_mat, t_total)
-        }
-        dist_df = as_tibble(expand.grid(1:nrow(sc_mat), 1:nrow(sc_mat)))
-        dist_df = dist_df[dist_df$Var1 < dist_df$Var2, ]
-        dist_df$coal_time = map_dbl(1:nrow(dist_df), function(k) {
-                i = dist_df$Var1[k]
-                j = dist_df$Var2[k]
-                estimate_coal_time(sc_mat[i, ], sc_mat[j, ], mut_p, total_coal_time = t_total, min_alele_prob = 0.0)
-        })
-        dist_df$dist = dist_df$coal_time * 2
-        dist_df$N1 = rownames(sc_mat)[dist_df$Var1]
-        dist_df$N2 = rownames(sc_mat)[dist_df$Var2]
-        if (return_dist) {
-                return(dist_df)
-        } else {
-                dmat = dist_df2mat(dist_df)
-                ord_indices = sample(nrow(dmat), replace = F)
-                tr = phangorn::upgma(dmat[ord_indices, ord_indices])
-                return(tr)
-        }
-}
+# phylotime_single_core <- function(sc_mat, t_total, mut_p = NULL, return_dist = F) {
+#         if (is.null(mut_p)) {
+#                 mut_p = estimate_mut_p(sc_mat, t_total)
+#         }
+#         dist_df = as_tibble(expand.grid(1:nrow(sc_mat), 1:nrow(sc_mat)))
+#         dist_df = dist_df[dist_df$Var1 < dist_df$Var2, ]
+#         dist_df$coal_time = map_dbl(1:nrow(dist_df), function(k) {
+#                 i = dist_df$Var1[k]
+#                 j = dist_df$Var2[k]
+#                 estimate_coal_time(sc_mat[i, ],
+#                                    sc_mat[j, ],
+#                                    mut_p,
+#                                    total_coal_time = t_total,
+#                                    min_alele_prob = 0.0)
+#         })
+#         dist_df$dist = dist_df$coal_time * 2
+#         dist_df$N1 = rownames(sc_mat)[dist_df$Var1]
+#         dist_df$N2 = rownames(sc_mat)[dist_df$Var2]
+#         if (return_dist) {
+#                 return(dist_df)
+#         } else {
+#                 dmat = dist_df2mat(dist_df)
+#                 ord_indices = sample(nrow(dmat), replace = F)
+#                 tr = phangorn::upgma(dmat[ord_indices, ord_indices])
+#                 return(tr)
+#         }
+# }
 
 upgma <- function(D, ...) {
         DD <- as.dist(D)
@@ -168,21 +172,38 @@ upgma <- function(D, ...) {
 #' @param sc_mat character matrix cell x barcoding sites
 #' @param t_total total amount of time since barcode activation
 #' @param return_dist whetehr to return pairwise distance between cells, by default, an ape tree is returned
-phylotime <- function(sc_mat, t_total, mut_p = NULL, return_dist = F) {
-        plan(multisession, workers = 12)
+phylotime <- function(sc_mat, t_total, mut_p = NULL, return_dist = F, parallel = T) {
+        assertthat::assert_that(!is.null(rownames(sc_mat)))
+        # plan(multisession, workers = 12)
         if (is.null(mut_p)) {
                 mut_p = estimate_mut_p(sc_mat, t_total)
         }
         dist_df = as_tibble(expand.grid(1:nrow(sc_mat), 1:nrow(sc_mat)))
         dist_df = dist_df[dist_df$Var1 < dist_df$Var2, ]
         # p <- progressor(along = 1:nrow(dist_df))
-        tt = proc.time()
-        dist_df$coal_time = future_map_dbl(1:nrow(dist_df), function(k) {
-                i = dist_df$Var1[k]
-                j = dist_df$Var2[k]
-                estimate_coal_time(sc_mat[i, ], sc_mat[j, ], mut_p, total_coal_time = t_total, min_alele_prob = 0.0)
-        }, .progress = T)
-        print(proc.time() - tt)
+        # tt = proc.time()
+        if (parallel == T) {
+                dist_df$coal_time = future_map_dbl(1:nrow(dist_df), function(k) {
+                        i = dist_df$Var1[k]
+                        j = dist_df$Var2[k]
+                        estimate_coal_time(sc_mat[i, ],
+                                           sc_mat[j, ],
+                                           mut_p,
+                                           total_coal_time = t_total,
+                                           min_alele_prob = 0.0)
+                }, .progress = T)
+        } else {
+                dist_df$coal_time = map_dbl(1:nrow(dist_df), function(k) {
+                        i = dist_df$Var1[k]
+                        j = dist_df$Var2[k]
+                        estimate_coal_time(sc_mat[i, ],
+                                           sc_mat[j, ],
+                                           mut_p,
+                                           total_coal_time = t_total,
+                                           min_alele_prob = 0.0)
+                })
+        }
+        # print(proc.time() - tt)
         dist_df$dist = dist_df$coal_time * 2
         dist_df$N1 = rownames(sc_mat)[dist_df$Var1]
         dist_df$N2 = rownames(sc_mat)[dist_df$Var2]
@@ -192,6 +213,7 @@ phylotime <- function(sc_mat, t_total, mut_p = NULL, return_dist = F) {
                 dmat = dist_df2mat(dist_df)
                 ord_indices = sample(nrow(dmat), replace = F)
                 tr = phangorn::upgma(dmat[ord_indices, ord_indices])
+                tr = name_nodes(tr)
                 # tr = upgma(dmat)
                 return(tr)
         }

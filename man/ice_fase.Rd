@@ -4,24 +4,16 @@
 \alias{ice_fase}
 \title{reconstructs phylogeny with phylotime, and infers quantitative fate map with ice_fase}
 \usage{
-ice_fase(
-  cell_mat,
-  sc_celltypes,
-  total_time,
-  root_time = 0,
-  theta = 0,
-  nrounds = 20,
-  max_depth = 4,
-  remove_uniform = F,
-  time_stat_func = mean
-)
+ice_fase(tr, sc_celltypes, total_time, root_time = 0, theta = 0)
 }
 \arguments{
-\item{cell_mat}{character matrix of single cell lineage barcodes cell by barcoding sites}
+\item{tr}{a phylogenetic tree of the "phylo" type}
 
 \item{sc_celltypes}{either a named character vector specifying types for each row in the cell_mat or a function to be applied to the rownames of the character matrix}
 
 \item{total_time}{time at sample collection since barcode activation}
+
+\item{theta}{depracated parameters always set to zero}
 }
 \value{
 Fitted ICE_FASE results

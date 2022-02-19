@@ -5,3 +5,5 @@ data
 metadata
 R_deprecated
 intermediate_data
+^doc$
+^Meta$

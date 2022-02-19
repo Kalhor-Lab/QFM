@@ -48,9 +48,9 @@ make_gr_tr_data <- function(gr, tr, sc_celltypes) {
         )
 }
 fate_to_str <- function(x) {
-        paste0(sort(as.numeric(x), decreasing = T), collapse = "_")
+        # paste0(sort(as.numeric(x), decreasing = T), collapse = "_")
+        paste0(sort(x), collapse = "_")
 }
-
 assign_node_states <- function(data_obj) {
         tr_node_assign = map_chr(data_obj$tr$node.label, function(node) {
                 x = data_obj$tr_tip_type_list[[node]]
@@ -65,7 +65,6 @@ assign_node_states <- function(data_obj) {
         tr_node_assign = c(tr_node_assign, data_obj$sc_celltypes)
         tr_node_assign
 }
-
 get_trans_assign_tb <- function(data_obj, tr_node_assign) {
         map(names(data_obj$tr_dd), function(x) {
                 tr_dd = data_obj$tr_dd
@@ -109,8 +108,6 @@ get_trans_assign_tb <- function(data_obj, tr_node_assign) {
                 return(transition_list)
         }) %>% bind_rows()
 }
-
-
 est_transition_time <- function(data_obj, tr_node_assign, stat_func = median) {
         trans_assign_tb = get_trans_assign_tb(data_obj, tr_node_assign)
         trans_type_time = trans_assign_tb %>% group_by(in_type) %>% summarize(time = stat_func(time))
@@ -231,10 +228,12 @@ transition2dist <- function(transition_tb, stat_func, total_time, replace_na = T
         # make pairs unique
         transition_tb_pairs = mutate(transition_tb_pairs,
                                      pair_x_sorted = map2_chr(pair_x, pair_y, function(x, y) {
-                                             c(x, y)[order(as.numeric(c(x, y)))[2]]
+                                             # c(x, y)[order(as.numeric(c(x, y)))[2]]
+                                             sort(c(x, y))[2]
                                      }),
                                      pair_y_sorted = map2_chr(pair_x, pair_y, function(x, y) {
-                                             c(x, y)[order(as.numeric(c(x, y)))[1]]
+                                             # c(x, y)[order(as.numeric(c(x, y)))[1]]
+                                             sort(c(x, y))[1]
                                      }))
         transition_tb_pairs = transition_tb_pairs %>%
                 select(-c(disjoint, pair_x, pair_y)) %>%
@@ -353,49 +352,49 @@ correct_trans_time <- function(gr_trans_time, gr_tr_data) {
         return(gr_trans_time)
 }
 #' reconstructs phylogeny with phylotime, and infers quantitative fate map with ice_fase
-#' @param cell_mat character matrix of single cell lineage barcodes cell by barcoding sites
+#' @param tr a phylogenetic tree of the "phylo" type
 #' @param sc_celltypes either a named character vector specifying types for each row in the cell_mat or a function to be applied to the rownames of the character matrix
 #' @param total_time time at sample collection since barcode activation
+#' @param theta depracated parameters always set to zero
 #' @return Fitted ICE_FASE results
-ice_fase <- function(cell_mat,
+ice_fase <- function(tr,
                      sc_celltypes,
                      total_time,
                      root_time = 0,
-                     theta = 0.0,
-                     nrounds = 20,
-                     max_depth = 4,
-                     remove_uniform = F,
-                     time_stat_func = mean) {
-        if (remove_uniform) {
-                cell_mat = remove_uniform_id(cell_mat)
-        }
-        mut_p = estimate_mut_p(cell_mat, total_time)
-        mat_im = impute_characters(cell_mat, nrounds = nrounds, max_depth = max_depth)
-
-        tr_upgma = phylotime(mat_im[sample(nrow(mat_im)), ],
-                             mut_p = mut_p,
-                             total_time)
+                     theta = 0.0) {
+                     # nrounds = 20,
+                     # max_depth = 4,
+                     # remove_uniform = F,
+                     # time_stat_func = mean) {
+        # if (remove_uniform) {
+        #         cell_mat = remove_uniform_id(cell_mat)
+        # }
+        # mut_p = estimate_mut_p(cell_mat, total_time)
+        # mat_im = impute_characters(cell_mat, nrounds = nrounds, max_depth = max_depth)
+        #
+        # tr_upgma = phylotime(mat_im[sample(nrow(mat_im)), ],
+        #                      mut_p = mut_p,
+        #                      total_time)
+        tr = name_nodes(tr)
         if (is.character(sc_celltypes)) {
                 assertthat::assert_that(!is.null(names(sc_celltypes)),
                                         msg = "cell types must be named.")
-                assertthat::assert_that(all(rownames(cell_mat) %in% names(sc_celltypes)))
+                assertthat::assert_that(all(tr$tip.label %in% names(sc_celltypes)))
                 cell_type_vec = sc_celltypes
         } else {
                 assertthat::assert_that(class(sc_celltypes) == "function")
-                cell_type_vec = sc_celltypes(rownames(mat_im))
-                names(cell_type_vec) = rownames(mat_im)
+                cell_type_vec = sc_celltypes(tr$tip.label)
+                names(cell_type_vec) = rownames(tr$tip.label)
         }
-        tr = name_nodes(tr_upgma)
         gr = name_nodes(reconstruct_graph(tr,
                                           sc_celltypes = cell_type_vec,
                                           theta = theta,
                                           total_time = total_time,
                                           stat_func = mean))
-
         data_obj = make_gr_tr_data(gr, tr, cell_type_vec)
         tr_node_assign = assign_node_states(data_obj)
 
-        gr_trans_time = est_transition_time(data_obj, tr_node_assign, stat_func = time_stat_func)
+        gr_trans_time = est_transition_time(data_obj, tr_node_assign, stat_func = mean)
         gr_tip_time = rep(total_time, length(unique(cell_type_vec)))
         names(gr_tip_time) = unique(cell_type_vec)
         gr_trans_time = c(gr_trans_time, gr_tip_time)
@@ -405,8 +404,7 @@ ice_fase <- function(cell_mat,
         data_obj = update_edge_tb_state(data_obj, tr_node_assign)
         gr_node_sizes = get_node_size(data_obj, tr_node_assign, gr_trans_time)
 
-        out = list(mat = cell_mat,
-                   impuated = mat_im,
+        out = list(tr = tr,
                    gr = gr,
                    gr_trans_time = gr_trans_time,
                    gr_node_sizes = gr_node_sizes,
@@ -504,3 +502,68 @@ filter_cells <- function(mat, cutoff = 2, abund_thres = 1) {
         }))
         mat[rowSums(spacer_ind_mat) > cutoff, ]
 }
+set_color_palette <- function(res, palette = NULL) {
+        if (is.null(palette)) {
+                res$col_pal = gr_color(res$gr)
+        } else {
+                assertthat::assert_that(
+                        length(palette) == length(c(res$gr$node.label, res$gr$tip.label))
+                        )
+                names(palette) = c(res$gr$node.label, res$gr$tip.label)
+                res$col_pal = palette
+        }
+        res
+}
+output_estimates <- function(res) {
+        out_tb = tibble(progenitor_state = res$gr$node.label)
+        out_tb$commitment_time = res$gr_trans_time[out_tb$progenitor_state]
+        out_tb$population_size = map_dbl(res$gr_node_sizes[out_tb$progenitor_state], 1)
+        out_tb$downstream_state1 = map_chr(res$gr_node_sizes[out_tb$progenitor_state], function(x) names(x)[2])
+        out_tb$downstream_size1 = map_dbl(res$gr_node_sizes[out_tb$progenitor_state], 2)
+        out_tb$downstream_state2 = map_chr(res$gr_node_sizes[out_tb$progenitor_state], function(x) names(x)[3])
+        out_tb$downstream_size2 = map_dbl(res$gr_node_sizes[out_tb$progenitor_state], 3)
+        out_tb$commitment_bias1 = out_tb$downstream_size1 / (out_tb$downstream_size1 + out_tb$downstream_size2)
+        out_tb$commitment_bias2 = out_tb$downstream_size2 / (out_tb$downstream_size1 + out_tb$downstream_size2)
+        out_tb
+}
+plot_ice_times <- function(res) {
+        lout = create_layout(as.igraph(res$gr), layout = "dendrogram")
+        lout_node = lout %>% filter(!leaf) %>% arrange(desc(x))
+        total_time = max(res$gr_trans_time)
+        trans_assign_tb = get_trans_assign_tb(res$gr_tr_data, res$tr_node_assign)
+        b_time = trans_assign_tb %>% mutate(in_type = factor(in_type, levels = lout_node$name)) %>%
+                ggboxplot(y = "time", x = "in_type", fill = "in_type", ylab = "Time", xlab = "", width = 0.8, size = 0.25) +
+                scale_fill_manual(values = res$col_pal, guide = F) + ylim(c(total_time, 0)) +
+                theme(axis.title.x = element_text(),
+                      axis.text.x = element_text(angle = 30))
+        b_time
+}
+plot_node_sizes <- function(res) {
+        lout = create_layout(as.igraph(res$gr), layout = "dendrogram")
+        lout_node = lout %>% filter(!leaf) %>% arrange(desc(x))
+
+        gr_node_sizes = res$gr_node_sizes
+        node_size_tb = bind_rows(map(names(gr_node_sizes), function(x) {
+                tibble(node = x,
+                       type = c("Progenitor population sizes", rep("Committed split sizes", 2)),
+                       split = names(gr_node_sizes[[x]]),
+                       count = gr_node_sizes[[x]])
+        }))
+        node_size_tb$type = factor(node_size_tb$type, levels = c("Progenitor population sizes", "Committed split sizes"))
+        b_size = node_size_tb %>% mutate(node = factor(node, levels = lout_node$name)) %>%
+                ggbarplot(x = "node", y = "count", fill = "split", ylab = "Count", xlab = "", col = NA) %>%
+                facet(facet.by = "type", ncol = 1) + scale_fill_manual(values = res$col_pal, guide = F) +
+                theme(text = element_text(size = 12),
+                      axis.text.x = element_text(angle = 30))
+        b_size
+}
+
+
+
+
+
+
+
+
+
+

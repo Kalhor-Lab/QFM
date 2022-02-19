@@ -12,6 +12,7 @@ output_dir = "./intermediate_data/panel/"
 exp_params = readRDS(paste0(output_dir, "exp_data_rep1_2_proc2.rds"))
 all_graphs = readRDS(paste0(output_dir, "all_graphs.rds"))
 
+
 # FIGURE 2: panel of all graphs
 # type_graph = all_graphs[[1]]
 # node_label_letter <- function(x) {

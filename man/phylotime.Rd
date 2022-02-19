@@ -4,7 +4,7 @@
 \alias{phylotime}
 \title{Phylotime for reconstructing time-scaled phylogeny based on lineage barcodes}
 \usage{
-phylotime(sc_mat, t_total, mut_p = NULL, return_dist = F)
+phylotime(sc_mat, t_total, mut_p = NULL, return_dist = F, parallel = T)
 }
 \arguments{
 \item{sc_mat}{character matrix cell x barcoding sites}

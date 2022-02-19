@@ -42,3 +42,7 @@ vignettes/*.pdf
 
 # Shiny token, see https://shiny.rstudio.com/articles/shinyapps.html
 rsconnect/
+inst/doc
+doc
+Meta
+analysis/panel/make_example_data.R

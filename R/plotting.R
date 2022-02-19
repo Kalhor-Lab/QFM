@@ -8,7 +8,6 @@ g_theme <- theme(
         axis.title.x = element_blank(),
         text = element_text(size = 12)
 )
-
 generate_mut_color <- function(mat) {
         unique_val = sort(unique(c(mat)))
         unique_val = unique_val[unique_val!="0"]
@@ -114,22 +113,35 @@ gr_color <- function(gr, jitter_amount = 2., neg = F) {
         # qplot(gr_embed[, 1], gr_embed[, 2], col = names(col)) + scale_color_manual(values = col)
         col
 }
-plot_gr_clean <- function(gr3, gr_node_time, node_col, target_time, node_size = 3, gr_node_cat = NULL) {
-        ig_gr3 = as.igraph(gr3)
-        # gr_node_time = node.depth.edgelength(gr3)
-        # names(gr_node_time) = c(gr3$tip.label, gr3$node.label)
-        # V(ig_gr3)$Time = gr_node_time[V(ig_gr3)$name] + gr_root_time
-        V(ig_gr3)$Time = gr_node_time[V(ig_gr3)$name]
-        V(ig_gr3)$type = V(ig_gr3)$name
-        V(ig_gr3)$node_label = V(ig_gr3)$name
-        if (!is.null(gr_node_cat)) {
-                V(ig_gr3)$Cat = gr_node_cat[V(ig_gr3)$name]
-        } else {
-                V(ig_gr3)$Cat = "None"
+plot_gr_clean <- function(gr, gr_node_time = NULL, total_time = NULL, type_col = NULL, node_label = NULL,
+                          node_size = 3,
+                          gr_node_cat = NULL) {
+        ig_gr = as.igraph(gr)
+        if (is.null(gr_node_time)) {
+                gr_node_time = node.depth.edgelength(gr)
+                names(gr_node_time) = c(gr$tip.label, gr$node.label)
+                V(ig_gr)$Time = gr_node_time[V(ig_gr)$name]
         }
-        # V(ig_gr3)$node_label = rep("", length(V(ig_gr3)$name))
-
-        g_out = ggraph(ig_gr3, layout = 'dendrogram', height = Time) +
+        V(ig_gr)$Time = gr_node_time[V(ig_gr)$name]
+        if (is.null(total_time)) {
+                total_time = max(gr_node_time)
+        }
+        # V(ig_gr)$Type = V(ig_gr)$name
+        if (!is.null(node_label)) {
+                V(ig_gr)$node_label = node_label[V(ig_gr)$name]
+        } else {
+                V(ig_gr)$node_label = V(ig_gr)$name
+        }
+        if (!is.null(gr_node_cat)) {
+                V(ig_gr)$Cat = gr_node_cat[V(ig_gr)$name]
+        } else {
+                V(ig_gr)$Cat = "None"
+        }
+        # V(ig_gr)$node_label = rep("", length(V(ig_gr)$name))
+        if (is.null(type_col)) {
+                type_col = gr_color(gr)
+        }
+        g_out = ggraph(ig_gr, layout = 'dendrogram', height = Time) +
                 geom_edge_bend(
                         aes(width = factor(1),
                             fontface = 'plain'),
@@ -156,9 +168,9 @@ plot_gr_clean <- function(gr3, gr_node_time, node_col, target_time, node_size = 
                 g_out  = g_out + scale_shape_manual(values = c(15))
         }
         g_out = g_out +
-                # scale_fill_manual(values = node_col) +
-                scale_color_manual(values = node_col) +
-                ylim(c(target_time, 0)) + ylab('Time') +
+                # scale_fill_manual(values = type_col) +
+                scale_color_manual(values = type_col) +
+                ylim(c(total_time, 0)) + ylab('Time') +
                 scale_edge_width_manual(values = 0.5, guide = "none") +
                 scale_size_manual(values = 4, guide = "none") +
                 theme(
@@ -173,22 +185,33 @@ plot_gr_clean <- function(gr3, gr_node_time, node_col, target_time, node_size = 
                 )
         g_out
 }
-
-plot_gr <- function(gr3, gr_node_time, node_col, target_time, node_label = NULL) {
-        ig_gr3 = as.igraph(gr3)
-        # gr_node_time = node.depth.edgelength(gr3)
-        # names(gr_node_time) = c(gr3$tip.label, gr3$node.label)
-        # V(ig_gr3)$Time = gr_node_time[V(ig_gr3)$name] + gr_root_time
-        V(ig_gr3)$Time = gr_node_time[V(ig_gr3)$name]
-        V(ig_gr3)$type = V(ig_gr3)$name
-        if (!is.null(node_label)) {
-                V(ig_gr3)$node_label = node_label[V(ig_gr3)$name]
-        } else {
-                V(ig_gr3)$node_label = V(ig_gr3)$name
+plot_gr <- function(gr,
+                    gr_node_time = NULL,
+                    total_time = NULL,
+                    type_col = NULL,
+                    node_label = NULL) {
+        ig_gr = as.igraph(gr)
+        if (is.null(gr_node_time)) {
+                gr_node_time = node.depth.edgelength(gr)
+                names(gr_node_time) = c(gr$tip.label, gr$node.label)
+                V(ig_gr)$Time = gr_node_time[V(ig_gr)$name]
+        }
+        V(ig_gr)$Time = gr_node_time[V(ig_gr)$name]
+        if (is.null(total_time)) {
+                total_time = max(gr_node_time)
         }
 
-        # V(ig_gr3)$node_label = rep("", length(V(ig_gr3)$name))
-        g_out = ggraph(ig_gr3, layout = 'dendrogram', height = Time) +
+        # V(ig_gr)$Type = V(ig_gr)$name
+        if (!is.null(node_label)) {
+                V(ig_gr)$node_label = node_label[V(ig_gr)$name]
+        } else {
+                V(ig_gr)$node_label = V(ig_gr)$name
+        }
+        # V(ig_gr)$node_label = rep("", length(V(ig_gr)$name))
+        if (is.null(type_col)) {
+                type_col = gr_color(gr)
+        }
+        g_out = ggraph(ig_gr, layout = 'dendrogram', height = Time) +
                 geom_edge_bend(
                         aes(width = factor(1),
                             fontface = 'plain'),
@@ -207,8 +230,8 @@ plot_gr <- function(gr3, gr_node_time, node_col, target_time, node_label = NULL)
                 ),
                 label.padding = unit(6, 'pt'))
         g_out = g_out +
-                scale_fill_manual(values = node_col) +
-                ylim(c(target_time, 0)) + ylab('Time') +
+                scale_fill_manual(values = type_col) +
+                ylim(c(total_time, 0)) + ylab('Time') +
                 scale_edge_width_manual(values = 0.5, guide = "none") +
                 scale_size_manual(values = 4, guide = "none") +
                 theme(
@@ -224,22 +247,22 @@ plot_gr <- function(gr3, gr_node_time, node_col, target_time, node_label = NULL)
         g_out
 }
 
-plot_gr_dendro <- function(gr3, gr_node_time, node_col, target_time, node_size = 3, gr_node_cat = NULL) {
-        ig_gr3 = as.igraph(gr3)
-        # gr_node_time = node.depth.edgelength(gr3)
-        # names(gr_node_time) = c(gr3$tip.label, gr3$node.label)
-        # V(ig_gr3)$Time = gr_node_time[V(ig_gr3)$name] + gr_root_time
-        V(ig_gr3)$Time = gr_node_time[V(ig_gr3)$name]
-        V(ig_gr3)$type = V(ig_gr3)$name
-        V(ig_gr3)$node_label = V(ig_gr3)$name
+plot_gr_dendro <- function(gr, gr_node_time, type_col, total_time, node_size = 3, gr_node_cat = NULL) {
+        ig_gr = as.igraph(gr)
+        # gr_node_time = node.depth.edgelength(gr)
+        # names(gr_node_time) = c(gr$tip.label, gr$node.label)
+        # V(ig_gr)$Time = gr_node_time[V(ig_gr)$name] + gr_root_time
+        V(ig_gr)$Time = gr_node_time[V(ig_gr)$name]
+        V(ig_gr)$type = V(ig_gr)$name
+        V(ig_gr)$node_label = V(ig_gr)$name
         if (!is.null(gr_node_cat)) {
-                V(ig_gr3)$Cat = gr_node_cat[V(ig_gr3)$name]
+                V(ig_gr)$Cat = gr_node_cat[V(ig_gr)$name]
         } else {
-                V(ig_gr3)$Cat = "None"
+                V(ig_gr)$Cat = "None"
         }
-        # V(ig_gr3)$node_label = rep("", length(V(ig_gr3)$name))
+        # V(ig_gr)$node_label = rep("", length(V(ig_gr)$name))
 
-        g_out = ggraph(ig_gr3, layout = 'dendrogram', height = Time) +
+        g_out = ggraph(ig_gr, layout = 'dendrogram', height = Time) +
                 geom_edge_elbow() +
                 geom_node_point(aes(color = type, shape = Cat),
                                 size = node_size)
@@ -256,9 +279,9 @@ plot_gr_dendro <- function(gr3, gr_node_time, node_col, target_time, node_size =
                 g_out  = g_out + scale_shape_manual(values = c(15))
         }
         g_out = g_out +
-                # scale_fill_manual(values = node_col) +
-                scale_color_manual(values = node_col) +
-                ylim(c(target_time, 0)) + ylab('Time') +
+                # scale_fill_manual(values = type_col) +
+                scale_color_manual(values = type_col) +
+                ylim(c(total_time, 0)) + ylab('Time') +
                 # scale_edge_width_manual(values = 0.5, guide = "none") +
                 scale_size_manual(values = 4, guide = "none") +
                 theme(
@@ -273,3 +296,53 @@ plot_gr_dendro <- function(gr3, gr_node_time, node_col, target_time, node_size =
                 )
         g_out
 }
+
+plot_tr <- function(tr,
+                    node_types = NULL,
+                    root_time = 0.0,
+                    type_col = NULL,
+                    total_time = NULL,
+                    node_size = 0.75,
+                    edge_alpha = 0.5,
+                    end_alpha_terminal = 0.25,
+                    edge_width = 0.2,
+                    edge_width_terminal = 0.05
+                    ) {
+        g_tr = as.igraph(tr)
+        tr_node_time = ape::node.depth.edgelength(tr) + root_time
+        names(tr_node_time) = c(tr$tip.label, tr$node.label)
+        V(g_tr)$time = tr_node_time[V(g_tr)$name]
+        V(g_tr)$type = "Unknown"
+        # setting node types
+        if (!is.null(node_types)) {
+                assertthat::assert_that(all(names(node_types) %in% V(g_tr)$name))
+                V(g_tr)$type[match(names(node_types), V(g_tr)$name)] = node_types
+        }
+        if (!is.null(total_time)) {
+                V(g_tr)$time[V(g_tr)$name %in% tr$tip.label] = total_time
+        } else {
+                total_time = max(V(g_tr)$time)
+        }
+        g_tr = set.edge.attribute(g_tr,
+                                  name = "ending",
+                                  index=  unlist(incident_edges(g_tr, tr$tip.label, mode = "in")),
+                                  value = T)
+        E(g_tr)$ending[is.na(E(g_tr)$ending)] = F
+        unknown_col = "#808080"
+        names(unknown_col) = "Unknown"
+        if (!is.null(type_col)) {
+                type_col = c(type_col, unknown_col)
+        } else {
+                type_col = unknown_col
+        }
+        g_out = ggraph(g_tr, layout = "dendrogram", height = time) +
+                geom_edge_diagonal(aes(alpha = ending, width = ending), color = "black") +
+                geom_node_point(aes(color = type), size = node_size) +
+                scale_edge_alpha_manual(values = c(edge_alpha, end_alpha_terminal)) +
+                scale_edge_width_manual(values = c(edge_width, edge_width_terminal)) +
+                scale_color_manual(values = type_col) +
+                ylim(c(total_time, 0)) + ylab("")
+        g_out + g_theme
+}
+# plot_tr
+
