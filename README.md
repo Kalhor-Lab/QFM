@@ -1,6 +1,5 @@
 # Quantitative Fate Mapping (QFM) via retrospective lineage barcodes
 
-Quick start:
 To install:
 ```
 if (!require("devtools"))
@@ -24,3 +23,6 @@ Or open a new issue on this Github page
 
 Corresponding authors:
 Reza Kalhor, Hongkai Ji
+
+Preprint:
+https://biorxiv.org/cgi/content/short/2022.02.13.480215v1
