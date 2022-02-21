@@ -15,7 +15,7 @@ library(furrr)
 plan(multisession, workers = 8)
 tr = phylotime(chr_mat[, 1:50], t_total = 15. - 0.6)
 
-## -----------------------------------------------------------------------------
+## ---- fig.width=8, fig.height=5-----------------------------------------------
 plot_barcodes(chr_mat[, 1:50], tr, show_column_names = F)
 
 ## ---- fig.width=10, fig.height=5----------------------------------------------
@@ -23,7 +23,7 @@ plot_tr(tr,
         end_alpha_terminal = 0.05,
         edge_width_terminal = 0.02)
 
-## -----------------------------------------------------------------------------
+## ---- fig.width=8, fig.height=5-----------------------------------------------
 sc_celltypes = cell_allele_table$type
 names(sc_celltypes) = cell_allele_table$cell
 print(sc_celltypes[1:10])
@@ -48,10 +48,10 @@ plot_tr(res$tr,
         end_alpha_terminal = 0.05,
         edge_width_terminal = 0.02)
 
-## -----------------------------------------------------------------------------
+## ---- fig.width=8, fig.height=5-----------------------------------------------
 plot_ice_times(res)
 
-## -----------------------------------------------------------------------------
+## ---- fig.width=8, fig.height=5-----------------------------------------------
 plot_node_sizes(res)
 
 ## -----------------------------------------------------------------------------

@@ -1,5 +1,5 @@
 ---
-title: "basic_tutorial"
+title: "Basic tutorial on Quantitative Fate Mapping (QFM)"
 author: "Weixiang Fang"
 output: rmarkdown::html_vignette
 vignette: >
@@ -45,9 +45,10 @@ tr = phylotime(chr_mat[, 1:50], t_total = 15. - 0.6)
 ```
 
 Now to visualize the reconstructed tree with the lineage barcodes:
-```{r}
+```{r, fig.width=8, fig.height=5}
 plot_barcodes(chr_mat[, 1:50], tr, show_column_names = F)
 ```
+
 To plot the reconstrcuted tree only:
 ```{r, fig.width=10, fig.height=5}
 plot_tr(tr,
@@ -57,7 +58,7 @@ plot_tr(tr,
 
 ### Running ICE-FASE
 Next, to apply ICE-FASE, we need, in additional, the terminal cell state classifications. This is provided as a named vector, where the name correspond to cell names. We can visualzie the tree with terminal cell states:
-```{r}
+```{r, fig.width=8, fig.height=5}
 sc_celltypes = cell_allele_table$type
 names(sc_celltypes) = cell_allele_table$cell
 print(sc_celltypes[1:10])
@@ -93,12 +94,12 @@ plot_tr(res$tr,
         edge_width_terminal = 0.02)
 ```
 To visualize distribution of Inferred Commitment Event (ICE) times:
-```{r}
+```{r, fig.width=8, fig.height=5}
 plot_ice_times(res)
 ```
 
 To visualize progenitor population sizes:
-```{r}
+```{r, fig.width=8, fig.height=5}
 plot_node_sizes(res)
 ```
 
