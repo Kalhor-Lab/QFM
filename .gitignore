@@ -2,7 +2,8 @@ R_deprecated/
 R_explore/
 plots/
 intermediate_data/panel/tr3/
-data/
+data/iPSC/
+data/MARC1/
 supplementary_data/
 *.rds
 *.rda

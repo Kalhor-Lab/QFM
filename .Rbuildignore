@@ -1,7 +1,8 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 supplementary_data
-data
+data/iPSC
+data/MARC1
 metadata
 R_deprecated
 R_explore
