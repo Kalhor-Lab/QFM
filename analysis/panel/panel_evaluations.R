@@ -9,9 +9,16 @@ method_col = c("sps x truth" = "#11468F",
 plot_col_vec(method_col)
 
 output_dir = "./intermediate_data/panel/"
-exp_params = readRDS(paste0(output_dir, "exp_data_rep1_2_proc2.rds"))
 all_graphs = readRDS(paste0(output_dir, "all_graphs.rds"))
+exp_params = readRDS(paste0(output_dir, "exp_data_10rep_wtree.rds"))
+# exp_params = readRDS(paste0(output_dir, "exp_data_rep1_2_proc2.rds"))
 
+exp_params$num_tip = map_dbl(exp_params$big_graph_id, function(j) {
+        length(all_graphs[[j]]$tip_id)
+})
+exp_params$bsum = map_dbl(exp_params$big_graph_id, function(j) {
+        calc_bsum(as.phylo.type_graph(all_graphs[[j]]))
+})
 
 # FIGURE 2: panel of all graphs
 # type_graph = all_graphs[[1]]
@@ -67,13 +74,13 @@ expm1_trans <-  function() trans_new("expm1", "expm1", "log1p")
 (exp_params %>% transmute(sampling = sampling,
                           num_tip = num_tip,
                           bsum = bsum,
-                          sps = map_dbl(exp_params$sps_gr_eval, function(x) {
-                            if (is.null(x)) {
-                              return(NA)
-                              } else {
-                                return(x$kc0)
-                                }
-                            }),
+                          # sps = map_dbl(exp_params$sps_gr_eval, function(x) {
+                          #   if (is.null(x)) {
+                          #     return(NA)
+                          #     } else {
+                          #       return(x$kc0)
+                          #       }
+                          #   }),
                           ice_fase_phylidite = map_dbl(exp_params$gr3_eval, function(x) {
                             if (is.null(x)) {
                               return(NA)
@@ -81,20 +88,21 @@ expm1_trans <-  function() trans_new("expm1", "expm1", "log1p")
                                 return(x$rf)
                                 }
                             }),
-                          ice_fase_hamming = map_dbl(exp_params$gr5_eval, function(x) {
-                            if (is.null(x)) {
-                              return(NA)
-                              } else {
-                                return(x$rf)
-                                }
-                            }),
-                          ice_fase = map_dbl(exp_params$gr_eval, function(x) {
-                            if (is.null(x)) {
-                              return(NA)
-                              } else {
-                                return(x$rf)
-                              }
-                            })) %>%
+                          # ice_fase_hamming = map_dbl(exp_params$gr5_eval, function(x) {
+                          #   if (is.null(x)) {
+                          #     return(NA)
+                          #     } else {
+                          #       return(x$rf)
+                          #       }
+                          #   }),
+                          # ice_fase = map_dbl(exp_params$gr_eval, function(x) {
+                          #   if (is.null(x)) {
+                          #     return(NA)
+                          #     } else {
+                          #       return(x$rf)
+                          #     }
+                          # })
+        ) %>%
         gather(key = "method", value = "rf", -c("sampling", "num_tip", "bsum")) %>%
   ggscatter(x = "bsum", y = "rf", color = "method",
             facet.by = c("sampling", "num_tip"),
@@ -102,7 +110,7 @@ expm1_trans <-  function() trans_new("expm1", "expm1", "log1p")
             xlab = "BSUM",
             xlim = c(0, NA),
             scales = "free", size = 0.1) +
-    scale_color_manual(values = method_col) +
+    # scale_color_manual(values = method_col) +
   geom_smooth(aes(color = method, group = method),
               size = 0.5, se = F,
               span = 1, method = "loess") +
@@ -111,8 +119,8 @@ expm1_trans <-  function() trans_new("expm1", "expm1", "log1p")
   theme(text = element_text(size = 12),
         legend.position = "right",
         axis.text.x = element_text(size = 9, angle = 65),
-        strip.background = element_blank())) %>%
-  push_pdf(file_name = "eval_ice_fase_phylidite_kc0", width = 5.5, height = 2.5, ps = 12, dir = "./plots/panel/")
+        strip.background = element_blank())) # %>%
+  # push_pdf(file_name = "eval_ice_fase_phylidite_kc0", width = 5.5, height = 2.5, ps = 12, dir = "./plots/panel/")
 
 # Generating evaluations on the experiment
 # evaluations with truth:
@@ -217,10 +225,10 @@ sampling_col = RColorBrewer::brewer.pal(9, "Spectral")
                 theme(text = element_text(size = 10),
                       # legend.position = "top",
                       legend.position = "none",
-                      strip.background = element_blank())) %>%
+                      strip.background = element_blank())) # %>%
   # plot_legend()
   # push_png(file_name = "node_time_est_bytip", res = 1200, w = 6.5, h = 2.8, dir = plot_dir)
-  push_png(file_name = "node_time_est_merge_nolab", res = 1200, w = 4.0, h = 2.0, dir = plot_dir)
+  # push_png(file_name = "node_time_est_merge_nolab", res = 1200, w = 4.0, h = 2.0, dir = plot_dir)
 
 eval_tb_plot = eval_tb_plot %>%
   # filter(suff_sampled) %>%

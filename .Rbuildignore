@@ -4,6 +4,7 @@ supplementary_data
 data
 metadata
 R_deprecated
+R_explore
 intermediate_data
 ^doc$
 ^Meta$

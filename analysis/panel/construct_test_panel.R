@@ -157,9 +157,6 @@ make_graph_from_phy <- function(phy,
         big_graph = generate_edge_df(big_graph)
         big_graph
 }
-calc_bsum <- function(phy) {
-        sum(apply(balance(phy), 1, function(x) abs(x[1] - x[2])))
-}
 # *****
 output_dir = "./intermediate_data/panel/"
 # dir.create(output_dir)

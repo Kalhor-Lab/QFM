@@ -213,8 +213,8 @@ phylotime <- function(sc_mat, t_total, mut_p = NULL, return_dist = F, parallel =
                 dmat = dist_df2mat(dist_df)
                 ord_indices = sample(nrow(dmat), replace = F)
                 tr = phangorn::upgma(dmat[ord_indices, ord_indices])
+                # tr = upgma(dmat[ord_indices, ord_indices])
                 tr = name_nodes(tr)
-                # tr = upgma(dmat)
                 return(tr)
         }
 }

@@ -157,3 +157,6 @@ white_col_mapper <- function(types) {
         names(out) = types
         return(out)
 }
+calc_bsum <- function(phy) {
+        sum(apply(balance(phy), 1, function(x) abs(x[1] - x[2])))
+}

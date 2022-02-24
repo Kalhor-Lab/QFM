@@ -1,4 +1,4 @@
-library(BiocParallel)
+# library(BiocParallel)
 simulate_bulk <- function(type_graph, mut_p, sample_size) {
         suppressMessages(devtools::load_all("."))
         suppressMessages(require(extraDistr))

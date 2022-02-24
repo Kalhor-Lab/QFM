@@ -1,6 +1,6 @@
 # produces phylogenies at smaller number of barcoding elements
 output_dir = "./intermediate_data/panel/"
-exp_params = readRDS(paste0(output_dir, "exp_data_rep1_2_proc2.rds"))
+exp_params = readRDS(paste0(output_dir, "exp_data_10rep_wtree.rds"))
 all_graphs = readRDS(paste0(output_dir, "all_graphs.rds"))
 
 library(furrr)
