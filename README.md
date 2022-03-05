@@ -24,6 +24,9 @@ To reproduce results in manuscript:
   2. Evaluation of ICE_FASE and Phylotime on simulation of panel of fate maps ('analysis/panel/')
   3. Process and analyze split well experiment ('analysis/splitwell/')
 
+Data from the manuscript can be found at:
+https://github.com/Kalhor-Lab/QFM-Data
+
 Report bugs and provide suggestions by sending email to:
 
 Author and maintainer: Weixiang Fang (wfang9@jh.edu)
