@@ -107,3 +107,17 @@ Finally, we can get a summary table for the progenitor state estimates:
 ```{r}
 output_estimates(res)
 ```
+
+### Handling missing alleles
+
+Most single cell lineage barcode data contains missing alleles for some cells, we use 'xgboost' predictions to impute the missing characters. 
+Barcoding sites were imputed one by one going from the one with fewest cells missing to the most cells missing. The imputed character matrix can be used for downstream pipelines. The example below randomly dropped 10% of all the alleles.
+
+```{r, message=F, warning=F}
+set.seed(73)
+chr_mat_missing = rlang::duplicate(chr_mat[, 1:50])
+missing_indices = sample(c(T, F), size = length(chr_mat[, 1:50]), prob = c(0.1, 0.9), replace = T)
+chr_mat_missing[missing_indices] = NA
+chr_mat_imputed = impute_characters(chr_mat_missing, nrounds = 20)
+```
+

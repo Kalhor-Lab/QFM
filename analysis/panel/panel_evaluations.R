@@ -1,11 +1,11 @@
-method_col = c("sps x truth" = "#11468F",
-               "sps" = "#11468F",
+method_col = c("sps x truth" = "#377eb8",
+               "sps" = "#377eb8",
                "ice_fase x hamming" = "#FC28FB",
                "ice_fase_hamming" = "#FC28FB",
-               "ice_fase x phylidite" = "#FFC900",
-               "ice_fase_phylidite" = "#FFC900",
-               "ice_fase x truth" = "#DA1212",
-               "ice_fase" = "#DA1212")
+               "ice_fase x phylidite" = "#4daf4a",
+               "ice_fase_phylidite" = "#4daf4a",
+               "ice_fase x truth" = "#e41a1c",
+               "ice_fase" = "#e41a1c")
 plot_col_vec(method_col)
 
 output_dir = "./intermediate_data/panel/"
@@ -13,6 +13,7 @@ all_graphs = readRDS(paste0(output_dir, "all_graphs.rds"))
 exp_params = readRDS(paste0(output_dir, "exp_data_10rep_wtree.rds"))
 # exp_params = readRDS(paste0(output_dir, "exp_data_rep1_2_proc2.rds"))
 
+exp_params$j = 1:nrow(exp_params)
 exp_params$num_tip = map_dbl(exp_params$big_graph_id, function(j) {
         length(all_graphs[[j]]$tip_id)
 })
@@ -74,34 +75,34 @@ expm1_trans <-  function() trans_new("expm1", "expm1", "log1p")
 (exp_params %>% transmute(sampling = sampling,
                           num_tip = num_tip,
                           bsum = bsum,
-                          # sps = map_dbl(exp_params$sps_gr_eval, function(x) {
+                          sps = map_dbl(exp_params$sps_gr_eval, function(x) {
+                            if (is.null(x)) {
+                              return(NA)
+                              } else {
+                                return(x$kc0)
+                                }
+                            }),
+                          # ice_fase_phylidite = map_dbl(exp_params$gr3_eval, function(x) {
                           #   if (is.null(x)) {
                           #     return(NA)
                           #     } else {
                           #       return(x$kc0)
                           #       }
                           #   }),
-                          ice_fase_phylidite = map_dbl(exp_params$gr3_eval, function(x) {
-                            if (is.null(x)) {
-                              return(NA)
-                              } else {
-                                return(x$rf)
-                                }
-                            }),
                           # ice_fase_hamming = map_dbl(exp_params$gr5_eval, function(x) {
                           #   if (is.null(x)) {
                           #     return(NA)
                           #     } else {
-                          #       return(x$rf)
+                          #       return(x$kc0)
                           #       }
                           #   }),
-                          # ice_fase = map_dbl(exp_params$gr_eval, function(x) {
-                          #   if (is.null(x)) {
-                          #     return(NA)
-                          #     } else {
-                          #       return(x$rf)
-                          #     }
-                          # })
+                          ice_fase = map_dbl(exp_params$gr_eval, function(x) {
+                            if (is.null(x)) {
+                              return(NA)
+                              } else {
+                                return(x$kc0)
+                              }
+                          })
         ) %>%
         gather(key = "method", value = "rf", -c("sampling", "num_tip", "bsum")) %>%
   ggscatter(x = "bsum", y = "rf", color = "method",
@@ -109,8 +110,10 @@ expm1_trans <-  function() trans_new("expm1", "expm1", "log1p")
             ylab = "KC0",
             xlab = "BSUM",
             xlim = c(0, NA),
-            scales = "free", size = 0.1) +
-    # scale_color_manual(values = method_col) +
+            scales = "free",
+            size = 0.1,
+            alpha  = 0.2) +
+    scale_color_manual(values = method_col) +
   geom_smooth(aes(color = method, group = method),
               size = 0.5, se = F,
               span = 1, method = "loess") +
@@ -119,21 +122,62 @@ expm1_trans <-  function() trans_new("expm1", "expm1", "log1p")
   theme(text = element_text(size = 12),
         legend.position = "right",
         axis.text.x = element_text(size = 9, angle = 65),
-        strip.background = element_blank())) # %>%
-  # push_pdf(file_name = "eval_ice_fase_phylidite_kc0", width = 5.5, height = 2.5, ps = 12, dir = "./plots/panel/")
+        strip.background = element_blank()))  %>%
+        push_pdf(file_name = "eval_ice_fase_kc0", width = 5.5, height = 2.5, ps = 12, dir = "./plots/panel_10rep/")
+        # push_pdf(file_name = "eval_ice_fase_phylotime_kc0", width = 5.5, height = 2.5, ps = 12, dir = "./plots/panel_10rep/")
 
 # Generating evaluations on the experiment
 # evaluations with truth:
-eval_tb_gr = generate_evaluate_tb(exp_params, all_graphs, tr_col = "tr", gr_col = "gr", gr_eval_col = "gr_eval")
+# old version in serial
+# eval_tb_gr = generate_evaluate_tb(exp_params, all_graphs, tr_col = "tr", gr_col = "gr", gr_eval_col = "gr_eval")
+# save(eval_tb_gr, file = paste0(output_dir, "./intermediate_data/panel/exp_10rep_gr_eval.rda"))
 # evaluations with phylotime:
 eval_tb_gr3 = generate_evaluate_tb(exp_params, all_graphs, tr_col = "tr3", gr_col = "gr3", gr_eval_col = "gr3_eval")
-save(eval_tb_gr, file = paste0(output_dir, "./intermediate_data/panel/exp_gr_eval.rda"))
-save(eval_tb_gr3, file = paste0(output_dir, "./intermediate_data/panel/exp_gr3_eval.rda"))
+save(eval_tb_gr3, file = paste0(output_dir, "./intermediate_data/panel/exp_10rep_gr3_eval.rda"))
 
-load(paste0(output_dir, "exp_gr_eval.rda"))
-source("./analysis/process_evaluation_results.R")
+library(furrr)
+plan(multisession, workers = 8)
+# new version in parallel
+exp_data = pmap(exp_params, function(tr, gr, big_graph_id, gr_eval, sampling, data, ...) {
+        list(sampling = sampling,
+             tr = tr,
+             gr = gr,
+             big_graph_id = big_graph_id,
+             eval = gr_eval,
+             data = data)
+})
+eval_tb_gr = future_map(exp_data, function(x) {
+        evaluate_experiment(x, all_graphs)
+}, .progress = T, .options = furrr_options(seed = T))
+save(eval_tb_gr, file = paste0(output_dir, "exp_10rep_gr_eval.rda"))
 
+eval_tb_node_assign = future_map(exp_data, function(x) {
+        evaluate_exp_node_assign(x, all_graphs)
+}, .progress = T, .options = furrr_options(seed = T))
+save(eval_tb_node_assign, file = paste0(output_dir, "exp_10rep_gr_eval_node_assign.rda"))
+
+
+exp_data = pmap(exp_params, function(tr3, gr3, big_graph_id, gr3_eval, sampling, data, ...) {
+        list(sampling = sampling,
+             tr = tr3,
+             gr = gr3,
+             big_graph_id = big_graph_id,
+             eval = gr3_eval,
+             data = data)
+})
+eval_tb_gr3 = future_map(exp_data, function(x) {
+        evaluate_experiment(x, all_graphs)
+}, .progress = T, .options = furrr_options(seed = T))
+save(eval_tb_gr3, file = paste0(output_dir, "exp_10rep_gr3_eval.rda"))
+
+load(paste0(output_dir, "exp_10rep_gr_eval.rda"))
+source("./analysis/panel/process_evaluation_results.R")
+
+# eval_tb_gr = map(1:length(eval_tb_gr), function(j) {
+#         eval_tb_gr[[j]]
+# })
 eval_tb_all = eval_tb_wrap(eval_tb_gr, exp_params)
+eval_tb_all
 
 # looking at node resolution vs sampling fraction
 # eval_tb_true = process_res(eval_tb_gr, return_true = T)
@@ -148,7 +192,7 @@ eval_tb_all = eval_tb_wrap(eval_tb_gr, exp_params)
 
 # set this tibble to be plotted
 eval_tb_plot = eval_tb_all
-plot_dir = "./plots/panel/"
+plot_dir = "./plots/panel_10rep/"
 
 # FIGURE S2: robustness plots
 eval_tb_plot = eval_tb_plot %>%
@@ -162,10 +206,18 @@ eval_tb_plot = eval_tb_plot %>%
                    # ylab = "log2(Progenitor state sampling fraction)",
                    xlab = "",
                    ylab = "",
-              size = 0.1) + geom_smooth(size = 0.5, se = F) +
-    geom_rect(xmin = log2(2.5), xmax = Inf, ymin = -2, ymax = 0.5, fill =NA, color = "red")) %>%
- push_png("sampling_coverage_scatter", w = 2.5, h = 1.5, ps = 12, res = 600, dir = plot_dir)
+                   alpha = 0.1,
+              size = 0.05) + geom_smooth(size = 0.5, se = F) +
+    geom_rect(xmin = log2(2.5), xmax = Inf, ymin = -2, ymax = 0.5, fill =NA, color = "red")+
+                theme(text = element_text(size = 10))) %>%
+ push_png("sampling_coverage_scatter", w = 3.0, h = 1.5, ps = 12, res = 600, dir = plot_dir)
 table(eval_tb_plot$log2_est_coverage > log2(2.5), eval_tb_plot$log2_node_sampled > -2)
+
+eval_tb_plot %>% group_by(sampling) %>%
+        summarise(cor = cor(gr_time_trans, node_time, method = "spearman", use = "complete.obs"))
+
+eval_tb_plot %>% group_by(sampling, suff_sampled) %>%
+        summarise(rmse = sqrt(mean((gr_time_trans - node_time)^2, na.rm = T)))
 
 library(pROC)
 # pROC_obj <- roc(eval_tb_plot$log2_node_sampled > -2,
@@ -215,20 +267,21 @@ sampling_col = RColorBrewer::brewer.pal(9, "Spectral")
                 span = 1,
                 se = F,
                 data = filter(eval_tb_plot, suff_sampled == "FALSE")) +
-    # stat_cor(aes(group = suff_sampled,
-    #              label =  ..r.label..),
-    #          method = "spearman",
-    #          cor.coef.name = "rho",
-    #          digits = 3) +
+    stat_cor(aes(group = suff_sampled,
+                 label =  ..r.label..),
+             method = "spearman",
+             cor.coef.name = "rho",
+             digits = 3) +
     scale_colour_gradientn(limits = c(-4, 0), colors = sampling_col[c(2, 5, 8)],
                            breaks = (-4):(-1), na.value = sampling_col[1]) +
                 theme(text = element_text(size = 10),
                       # legend.position = "top",
                       legend.position = "none",
-                      strip.background = element_blank())) # %>%
+                      strip.background = element_blank())) %>%
   # plot_legend()
   # push_png(file_name = "node_time_est_bytip", res = 1200, w = 6.5, h = 2.8, dir = plot_dir)
   # push_png(file_name = "node_time_est_merge_nolab", res = 1200, w = 4.0, h = 2.0, dir = plot_dir)
+  push_png(file_name = "node_time_est_merge", res = 1200, w = 4.0, h = 2.0, dir = plot_dir)
 
 eval_tb_plot = eval_tb_plot %>%
   # filter(suff_sampled) %>%
@@ -261,16 +314,17 @@ eval_tb_plot = eval_tb_plot %>%
     ylab("") +
     # xlab("log2(Progenitor population size)") +
     # ylab("log2(Inferred progenitor population size)") +
-    # stat_cor(aes(group = suff_sampled,
-    #              label =  ..r.label..),
-    #          method = "spearman",
-    #          cor.coef.name = "rho",
-    #          digits = 3) +
+    stat_cor(aes(group = suff_sampled,
+                 label =  ..r.label..),
+             method = "spearman",
+             cor.coef.name = "rho",
+             digits = 3) +
     scale_colour_gradientn(limits = c(-4, 0), colors = sampling_col[c(2, 5, 8)],
                            breaks = (-4):(-1), na.value = sampling_col[1]) +
     theme(text = element_text(size = 10), legend.position = "none", strip.background = element_blank())) %>%
   # push_png(file_name = "node_size_est_bytip", res = 1200, w = 6.5, h = 2.8, dir = plot_dir)
-push_png(file_name = "node_size_est_merge_nolab", res = 1200, w = 4.0, h = 2.0, dir = plot_dir)
+# push_png(file_name = "node_size_est_merge_nolab", res = 1200, w = 4.0, h = 2.0, dir = plot_dir)
+push_png(file_name = "node_size_est_merge", res = 1200, w = 4.0, h = 2.0, dir = plot_dir)
 
 # this plot has not been updated to the latest
 # (eval_tb_plot %>%
@@ -316,16 +370,17 @@ push_png(file_name = "node_size_est_merge_nolab", res = 1200, w = 4.0, h = 2.0, 
                 span = 1,
                 se = F,
                 data = filter(eval_tb_plot, suff_sampled == "FALSE")) +
-    # stat_cor(aes(group = suff_sampled,
-    #              label =  ..r.label..),
-    #          method = "spearman",
-    #          cor.coef.name = "rho",
-    #          digits = 3) +
+    stat_cor(aes(group = suff_sampled,
+                 label =  ..r.label..),
+             method = "spearman",
+             cor.coef.name = "rho",
+             digits = 3) +
     scale_colour_gradientn(limits = c(-4, 0), colors = sampling_col[c(2, 5, 8)],
                            breaks = (-4):(-1), na.value = sampling_col[1]) +
         theme(text = element_text(size = 10), legend.position = "none", strip.background = element_blank())) %>%
   # push_png(file_name = "node_split_est_bytip", res = 1200, w = 6.5, h = 2.8, dir = plot_dir)
-  push_png(file_name = "node_split_est_merge_nolab", res = 1200, w = 4.0, h = 2.0, dir = plot_dir)
+        push_png(file_name = "node_split_est_merge", res = 1200, w = 4.0, h = 2.0, dir = plot_dir)
+  # push_png(file_name = "node_split_est_merge_nolab", res = 1200, w = 4.0, h = 2.0, dir = plot_dir)
 
 
 # summary plots
@@ -344,15 +399,16 @@ push_png(file_name = "node_size_est_merge_nolab", res = 1200, w = 4.0, h = 2.0, 
 #         filter(suff_sampled) %>%
 #         gghistogram(x = "log2_node_size", fill = "orange")
 
-(eval_tb_plot %>%
-                filter(suff_sampled) %>%
-                ggline(x = "bsum",
-                       y = "gr_time_trans_error",
-                       facet.by = c("sampling", "num_tip"),
-                       add = "mean_se",
-                       scales = "free_x") +
-                geom_hline(yintercept = 0)) #%>%
+# (eval_tb_plot %>%
+#                 filter(suff_sampled) %>%
+#                 ggline(x = "bsum",
+#                        y = "gr_time_trans_error",
+#                        facet.by = c("sampling", "num_tip"),
+#                        add = "mean_se",
+#                        scales = "free_x") +
+#                 geom_hline(yintercept = 0)) #%>%
         #push_pdf(file_name = "time_error", w = 7.5, h = 2.5, dir = "../LTModelPlots/temp_panel_eval/")
+
 
 (eval_tb_plot %>% group_by(j) %>%
                 summarise(bsum = bsum[1],
@@ -383,21 +439,21 @@ push_png(file_name = "node_size_est_merge_nolab", res = 1200, w = 4.0, h = 2.0, 
 ) %>%
   push_pdf(file_name = "frac_suff_sampled_v1", w = 6.5, h = 3., dir = plot_dir)
 
-(eval_tb_plot %>%
-    group_by(j) %>%
-    summarise(bsum = bsum[1],
-              sampling = sampling[1],
-              num_tip = num_tip[1],
-              frac_resolved = mean(is_resolved),
-              frac_suff_sampled = mean(suff_sampled)) %>%
-    ggline(x = "bsum",
-           y = "frac_suff_sampled",
-           facet.by = c("sampling", "num_tip"),
-           scales = "free_x",
-           add = "mean_se", ylim = c(0, 1)) +
-    theme(text = element_text(size = 10),
-          axis.text.x = element_text(size = 9, angle = 65))
-  ) #%>%
+# (eval_tb_plot %>%
+#     group_by(j) %>%
+#     summarise(bsum = bsum[1],
+#               sampling = sampling[1],
+#               num_tip = num_tip[1],
+#               frac_resolved = mean(is_resolved),
+#               frac_suff_sampled = mean(suff_sampled)) %>%
+#     ggline(x = "bsum",
+#            y = "frac_suff_sampled",
+#            facet.by = c("sampling", "num_tip"),
+#            scales = "free_x",
+#            add = "mean_se", ylim = c(0, 1)) +
+#     theme(text = element_text(size = 10),
+#           axis.text.x = element_text(size = 9, angle = 65))
+#   ) #%>%
    #     push_pdf(file_name = "frac_suff_sampled", w = 6.5, h = 3., dir = plot_dir)
 # ggscatter(eval_tb_plot, x = "mean_cosar_error", y = "is_resolved")+ geom_smooth(method = "lm")
 
@@ -421,12 +477,15 @@ qplot((eval_tb_plot$gr_node_size_in / node_collect_size),
       eval_tb_plot$gr_time_trans_error)
 
 # histogram for node assignment accuracy per experiment
-node_assign_raw = bind_rows(evaluate_node_assign(exp_params, all_graphs, tr_col = "tr", gr_col = "gr"))
-saveRDS(node_assign_raw, file = "./intermediate_data/panel/exp_node_assign.rds")
-node_assign_accracy = node_assign_raw %>%
+node_assign_raw = bind_rows(map(1:length(eval_tb_node_assign), function(j) {
+        mutate(eval_tb_node_assign[[j]], j = j)
+}))
+node_assign_raw %>%
         group_by(j) %>%
         summarise(accuracy = mean(correct)) %>%
-        gghistogram(x = "accuracy", fill = "#1572A1", color = NA)
+        gghistogram(x = "accuracy", fill = "#045a8d", color = "black", size = 0.25) %>%
+        push_pdf("node_assign_accuracy", width = 2.5, h = 1.5, dir = "./plots/panel_10rep/")
+
 
 # further evaluations of node assignments and sampling fraction (unused)
 # node_assign_tb = bind_rows(evaluate_node_assign(exp_params, all_graphs, tr_col = "tr", gr_col = "gr"))
@@ -442,7 +501,7 @@ node_assign_accracy = node_assign_raw %>%
 
 #### Second Section ####
 # further panel evaluations involving Phylotime
-load(paste0(output_dir, "exp_gr3_eval.rda"))
+load(paste0(output_dir, "exp_10rep_gr3_eval.rda"))
 set.seed(73)
 eval_sum = bind_rows(
         eval_tb_wrap(eval_tb_gr, exp_params) %>% group_by(sampling, num_tip, suff_sampled) %>%
@@ -483,7 +542,7 @@ g1 = ggbarplot(eval_sum, x = "suff_sampled", y = "cs", fill = "method",
                color = NA,
                position = position_dodge(),
                facet.by = c("sampling", "num_tip"),
-               ylab = "Correlation with Truth") +
+               ylab = "Correlation with truth") +
         scale_fill_manual(values = method_col) +
         theme(text = element_text(size = 10),
               legend.position = "right")
@@ -493,7 +552,7 @@ g1m = ggbarplot(eval_sum_merge, x = "suff_sampled", y = "cs", fill = "method",
                 facet.by = c("sampling"),
                 title = "Commitment time",
                 xlab = ">= 25% Sampled",
-                ylab = "Correlation with Truth") +
+                ylab = "Correlation with truth") +
         scale_fill_manual(values = method_col) +
         theme(text = element_text(size = 10),
               legend.position = "right",
@@ -539,7 +598,7 @@ g2 = ggbarplot(eval_sum, x = "suff_sampled", y = "cs", fill = "method",
                position = position_dodge(),
                facet.by = c("sampling", "num_tip"),
                xlab = ">= 25% Sampled",
-               ylab = "Correlation with Truth") +
+               ylab = "Correlation with truth") +
         scale_fill_manual(values = method_col) +
         theme(text = element_text(size = 10),
               legend.position = "right")
@@ -550,7 +609,7 @@ g2m = ggbarplot(eval_sum_merge, x = "suff_sampled", y = "cs", fill = "method",
                 facet.by = c("sampling"),
                 title = "Progenitor population size",
                 xlab = ">= 25% Sampled",
-                ylab = "Correlation with Truth") +
+                ylab = "Correlation with truth") +
         scale_fill_manual(values = method_col) +
         theme(text = element_text(size = 10),
               legend.position = "right",
@@ -605,7 +664,7 @@ g3 = ggbarplot(eval_sum, x = "suff_sampled", y = "cs", fill = "method",
                position = position_dodge(),
                facet.by = c("sampling", "num_tip"),
                xlab = ">= 25% Sampled",
-               ylab = "Correlation with Truth") + scale_fill_manual(values = method_col) +
+               ylab = "Correlation with truth") + scale_fill_manual(values = method_col) +
         theme(text = element_text(size = 10),
               legend.position = "right")
 
@@ -615,7 +674,7 @@ g3m = ggbarplot(eval_sum_merge, x = "suff_sampled", y = "cc", fill = "method",
                 facet.by = c("sampling"),
                 title = "Commitment bias",
                 xlab = ">= 25% Sampled",
-                ylab = "Correlation with Truth") + scale_fill_manual(values = method_col) +
+                ylab = "Correlation with truth") + scale_fill_manual(values = method_col) +
         theme(text = element_text(size = 10),
               legend.position = "right",
               strip.background = element_blank())
@@ -630,8 +689,8 @@ method_col = c("sps x truth" = "#11468F",
                "ice_fase" = "#DA1212")
 
 (g1m / g2m / g3m) %>%
-        push_pdf(file_name = "eval_pp_params_merge_cov",
-                 width = 6.5, height = 6, ps = 10,
+        push_pdf(file_name = "eval_pp_params_merge_cov_v1",
+                 width = 5.0, height = 6, ps = 10,
                  dir = plot_dir)
 #### End Second Section ####
 

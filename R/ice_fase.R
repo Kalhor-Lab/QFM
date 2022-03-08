@@ -427,8 +427,10 @@ plot_gr_data <- function(out_data, target_time, gr_col = NULL, gr_lab = NULL) {
 }
 #' Impute missing characters from cell allele matrix
 #' @param mat character matrix with rows corresponding to cells and columns corresponding to barcoding sites
-options(na.action='na.pass')
 impute_characters <- function(mat, nrounds = 100, max_depth = 4) {
+        op = options(na.action='na.pass')
+        on.exit(options(op))
+
         # separate out part of the matrix that has no variability
         col_div = apply(mat, 2, function(x) length(unique(x[!is.na(x)])))
         im_indices = which(col_div > 1)
@@ -465,6 +467,7 @@ impute_characters <- function(mat, nrounds = 100, max_depth = 4) {
                                                 nthread = 12,
                                                 nrounds = nrounds,
                                                 objective = "multi:softmax",
+                                                eval_metric = "mlogloss",
                                                 num_class= max(y_vec[!is.na(y_vec)]),
                                                 verbose = 0))
                 y_pred = levels(y_fac)[predict(bst, design_mat[is.na(y_vec), ]) + 1]

@@ -2,8 +2,8 @@ library(qfm)
 output_dir = "./intermediate_data/panel/"
 all_graphs = readRDS(paste0(output_dir, "all_graphs.rds"))
 exp_params = readRDS(paste0(output_dir, "exp_data_10rep_wtree.rds"))
-
-# exp_params$tr = map(exp_params$)
+# exp_params = readRDS(paste0(output_dir, "exp_data_10rep_proc.rds"))
+table(map_lgl(exp_params$tr3, is.null))
 
 library(furrr)
 plan(multisession, workers = 6)
@@ -84,33 +84,35 @@ saveRDS(exp_params, paste0(output_dir, "exp_data_10rep_proc.rds"))
 #### END UPGMA Hamming (Manhattan) part ####
 
 # Truth Part #
-exp_params = mutate(exp_params, gr = future_map(tr, function(tr_r) {
+library(furrr)
+plan(multisession, workers = 6)
+total_time = 15.0 - 0.6
+exp_params$gr = future_map(exp_params$tr, function(tr_r) {
         if (is.null(tr_r)) {
                 return(NULL)
         }
         sc_celltypes = get_type_from_id(tr_r$tip.label)
         names(sc_celltypes) = tr_r$tip.label
-        gr = reconstruct_graph(tr_r, sc_celltypes, total_time, stat_func = mean, theta = 1.0)
+        gr = reconstruct_graph(tr_r, sc_celltypes, total_time, stat_func = mean, theta = 0.0)
         gr
-}, .progress = T, .options = furrr_options(seed = T)))
+}, .progress = T, .options = furrr_options(seed = T))
 exp_params = mutate(exp_params,
                     gr_eval = map2(gr, big_graph_id, function(x, i) {
                             if (is.null(x)) {
                                     return(NULL)
                             }
-                            evalute_gr(x, as.phylo(all_graphs[[i]]))
+                            evalute_gr(x, as.phylo.type_graph(all_graphs[[i]]))
                     }))
 # End Truth Part #
 
 #### SPS part ####
-exp_params$sps = map(1:nrow(exp_params), function(j) {
-        message(j)
-        if (is.null(exp_params$tr[[j]])) {
+exp_params$sps = future_map2(exp_params$tr, exp_params$big_graph_id, function(tr_r, j) {
+        if (is.null(tr_r)) {
                 return(NULL)
         }
-        shared_progenitor_score(exp_params$tr[[j]],
-                                all_graphs[[exp_params$big_graph_id[j]]]$tip_id)
-})
+        shared_progenitor_score(tr_r,
+                                all_graphs[[j]]$tip_id)
+}, .progress = T)
 exp_params$sps_dist = map(exp_params$sps, function(sps_mat) {
         if (is.null(sps_mat)) {
                 return(NULL)
@@ -134,13 +136,13 @@ exp_params$sps_gr = map(exp_params$sps_dist, function(x) {
 #         }
 #         phytools::midpoint.root(phangorn::NJ(as.dist(x)))
 # })
-exp_params$sps_gr_eval = map2(exp_params$sps_gr, exp_params$big_graph_id,
+exp_params$sps_gr_eval = future_map2(exp_params$sps_gr, exp_params$big_graph_id,
                               function(x, i) {
                                       if (is.null(x)) {
                                               return(NULL)
                                       }
-                                      evalute_gr(x, as.phylo(all_graphs[[i]])
+                                      evalute_gr(x, as.phylo.type_graph(all_graphs[[i]])
                                       )
-                              })
+                              }, .progress = T, .options = furrr_options(seed = T))
 #### end sps part ####
 

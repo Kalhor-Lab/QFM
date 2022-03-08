@@ -85,14 +85,19 @@ dump_mut_p_list <- function(mut_p_list, output_dir) {
                 dump_mut_p(mut_p_list[[j]], mutp_dir)
         }
 }
-dump_sc_mat <- function(sc_mat_list, output_dir) {
+dump_sc_mat <- function(sc_mat_list, output_dir, zip_data = T) {
         for (i in 1:length(sc_mat_list)) {
                 sc_mat = sc_mat_list[[i]]
                 barcode_df = data.frame(sc_mat)
                 barcode_df = barcode_df[, !apply(barcode_df, 2, function(z) all(z == "0"))]
                 barcode_df$cell = rownames(sc_mat)
+                output_file = file.path(output_dir, paste0(stringr::str_pad(i, width = 4, pad = "0"), "_barcodes.txt"))
                 readr::write_tsv(barcode_df,
-                                 path = file.path(output_dir, paste0(stringr::str_pad(i, width = 4, pad = "0"), "_barcodes.txt")),
+                                 path = output_file,
                                  col_names = F)
+                if (zip_data) {
+                        zip(paste0(output_file, ".zip"), output_file)
+                        file.remove(output_file)
+                }
         }
 }
