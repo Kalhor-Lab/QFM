@@ -11,7 +11,7 @@ BiocManager::install(version = "3.14")
 
 # install two dependencies from Bioconductor
 BiocManager::install("Biostrings")
-BiocManager::install(“ComplexHeatmap”)
+BiocManager::install("ComplexHeatmap")
 
 devtools::install_github("Kalhor-Lab/QFM")
 ```
