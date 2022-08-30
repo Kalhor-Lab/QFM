@@ -1,5 +1,11 @@
-init_cell_barcode <- function(mut_param, num_cell = 1) {
-        matrix("0", num_cell, length(mut_param))
+init_cell_barcode <- function(mut_param, num_cell = 1, somatic = F) {
+        if (somatic) {
+                # for more than one cell, creates alleles for each cell
+                out = som_barcode_matrix(num_cell)
+        } else {
+                out = matrix("0", num_cell, length(mut_param))
+        }
+        out
 }
 distribute_barcodes <- function(barcodes, n_vec) {
         if (nrow(barcodes) != sum(n_vec)) {
@@ -134,7 +140,12 @@ get_new_muts_barcode <- function(b0, b1) {
 #
 # collect_gens[[type_graph$root_id]]$barcode_history = list(init_cell_barcode(mut_param))
 # x$end_barcodes_mode = barcodes_mode
-sample_sc_mut_history_gens <- function(x, mut_param, target_time=NA) {
+sample_sc_mut_history_gens <- function(x, mut_param, somatic = F, target_time=NA) {
+        if (somatic) {
+                barcode_mut_func = sample_somatic_barcodes
+        } else {
+                barcode_mut_func = sample_all_barcodes
+        }
         # message(x$cell_type)
         # generate history of mutations from "start_barcodes"
         assertthat::assert_that(nrow(x$start_barcodes) == x$sample_size[1])
@@ -145,10 +156,10 @@ sample_sc_mut_history_gens <- function(x, mut_param, target_time=NA) {
         # m_history = list()
         if (x$num_gen >= 1) {
                 for (i in 1:x$num_gen) {
-                        b1 = sample_all_barcodes(b0,
-                                                 mut_param = mut_param,
-                                                 start_time = x$start_time + x$double_time * (i - 1),
-                                                 end_time = x$start_time + x$double_time * i)
+                        b1 = barcode_mut_func(b0,
+                                              mut_param = mut_param,
+                                              start_time = x$start_time + x$double_time * (i - 1),
+                                              end_time = x$start_time + x$double_time * i)
                         # singleton
                         n0 = x$sample_size[i]*2 - x$sample_size[i+1]
                         # non-singleton
@@ -180,10 +191,10 @@ sample_sc_mut_history_gens <- function(x, mut_param, target_time=NA) {
         m_end_time = ifelse(!x$active & !is.na(target_time),
                             target_time,
                             x$end_time + x$double_time)
-        b_end_mut = sample_all_barcodes(b_end,
-                                        mut_param = mut_param,
-                                        start_time = x$end_time,
-                                        end_time = m_end_time)
+        b_end_mut = barcode_mut_func(b_end,
+                                     mut_param = mut_param,
+                                     start_time = x$end_time,
+                                     end_time = m_end_time)
 
         # m_history = append(m_history, list(get_new_muts(b_end, b_end_mut)))
         x$barcode_history = b_history
@@ -196,7 +207,7 @@ sample_sc_mut_history_gens <- function(x, mut_param, target_time=NA) {
         }
         x
 }
-split_barcodes <- function(y, x1, x2, mut_param, target_time) {
+split_barcodes <- function(y, x1, x2, mut_param, target_time, somatic) {
         message(y$cell_type)
         # b1 = double_barcodes(y$end_barcodes_mode[[3]], y$end_barcodes_mode[[1]])
         # b2 = double_barcodes(y$end_barcodes_mode[[3]], y$end_barcodes_mode[[2]])
@@ -273,25 +284,28 @@ split_barcodes <- function(y, x1, x2, mut_param, target_time) {
         x2$transition_edges = edges2
         x1$transition_nodes = nodes1
         x2$transition_nodes = nodes2
-        x1 = sample_sc_mut_history_gens(x1, mut_param = mut_param, target_time = target_time)
-        x2 = sample_sc_mut_history_gens(x2, mut_param = mut_param, target_time = target_time)
+        x1 = sample_sc_mut_history_gens(x1, mut_param = mut_param, target_time = target_time, somatic = somatic)
+        x2 = sample_sc_mut_history_gens(x2, mut_param = mut_param, target_time = target_time, somatic = somatic)
         return(list(x1, x2, y))
 }
-simulate_sc_muts <- function(collect_gens, type_graph, mut_param) {
+simulate_sc_muts <- function(collect_gens, type_graph, mut_param, somatic = F) {
         collect_gens[[type_graph$root_id]]$start_barcodes = init_cell_barcode(mut_param,
-                                                                              num_cell = collect_gens[[type_graph$root_id]]$sample_size[1])
+                                                                              num_cell = collect_gens[[type_graph$root_id]]$sample_size[1],
+                                                                              somatic = somatic)
         rownames(collect_gens[[type_graph$root_id]]$start_barcodes) =
                 paste0("type_", type_graph$root_id, "_gen_", 0, "_", 1:nrow(collect_gens[[type_graph$root_id]]$start_barcodes))
         collect_gens[[type_graph$root_id]] = sample_sc_mut_history_gens(collect_gens[[type_graph$root_id]],
                                                                         mut_param = mut_param,
-                                                                        target_time = type_graph$target_time)
+                                                                        target_time = type_graph$target_time,
+                                                                        somatic = somatic)
         for (node_id in forward_merge_sequence(type_graph)) {
                 node_dau = as.character(type_graph$merge[node_id, ])
                 temp = split_barcodes(collect_gens[[node_id]],
                                       collect_gens[[node_dau[1]]],
                                       collect_gens[[node_dau[2]]],
                                       mut_param = mut_param,
-                                      target_time = type_graph$target_time)
+                                      target_time = type_graph$target_time,
+                                      somatic = somatic)
                 collect_gens[[node_dau[1]]] = temp[[1]]
                 collect_gens[[node_dau[2]]] = temp[[2]]
                 # rewriting the current gen just to update the cell names
@@ -311,31 +325,34 @@ simulate_sc_muts <- function(collect_gens, type_graph, mut_param) {
 # gens1 = sample_size_gens(gens0, type_graph, sample_size = 5000)
 # gens1 = simulate_sc_muts(gens1, type_graph, mut_param = mut_param)
 #
-collect_nodes <- function(gens, tip_id) {
-        # gens = gens1
-        nodes_leaf = lapply(gens[tip_id], function(x) {
-                nodes = data.frame(id = rownames(x$end_barcodes),
-                                   degree = 1,
-                                   gen = x$num_gen+1,
-                                   type = x$cell_type,
-                                   time = x$end_time,
-                                   double_time = x$double_time,
-                                   leaf = TRUE, stringsAsFactors = F)
-                nodes
-        })
-        nodes_internal = lapply(gens, function(x) {
-                rbind(x$transition_nodes,
-                      do.call(rbind, x$nodes_history))
-        })
-        rbind(do.call(rbind, nodes_internal),
-              do.call(rbind, nodes_leaf))
-}
-collect_edges <- function(gens) {
-        out = do.call(rbind, lapply(gens, function(x) {
-                rbind(x$transition_edges,
-                      do.call(rbind, x$edges_history))
-        }))
-}
+
+# deprecated
+# collect_nodes <- function(gens, tip_id) {
+#         # gens = gens1
+#         nodes_leaf = lapply(gens[tip_id], function(x) {
+#                 nodes = data.frame(id = rownames(x$end_barcodes),
+#                                    degree = 1,
+#                                    gen = x$num_gen+1,
+#                                    type = x$cell_type,
+#                                    time = x$end_time,
+#                                    double_time = x$double_time,
+#                                    leaf = TRUE, stringsAsFactors = F)
+#                 nodes
+#         })
+#         nodes_internal = lapply(gens, function(x) {
+#                 rbind(x$transition_nodes,
+#                       do.call(rbind, x$nodes_history))
+#         })
+#         rbind(do.call(rbind, nodes_internal),
+#               do.call(rbind, nodes_leaf))
+# }
+# deprecated
+# collect_edges <- function(gens) {
+#         out = do.call(rbind, lapply(gens, function(x) {
+#                 rbind(x$transition_edges,
+#                       do.call(rbind, x$edges_history))
+#         }))
+# }
 
 
 

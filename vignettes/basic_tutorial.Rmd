@@ -67,22 +67,17 @@ plot_barcodes(chr_mat[, 1:50], tr, tip_celltype = sc_celltypes, show_column_name
 
 To run ICE-FASE:  ('root_time' is the time until barcode activation.)
 ```{r}
-res = ice_fase(tr, sc_celltypes, total_time = 15 - 0.6, root_time = 0.6)
+res = ice_fase_mod(tr, sc_celltypes, total_time = 15 - 0.6, root_time = 0.6)
 ```
 
 ### ICE-FASE results
-With ICE-FASE fitted, a number of progenitor states are identified as nodes in the fate map topology. For future visualizations, we set the color scheme for the progenitor and terminal states. A default color palette is generated. If you wish to set you own color scheme, use the 'palette' argument. The vector of colors corresponds to the vector `c(res$gr$node.label, res$gr$tip.label)`. For example, with 16 terminal states, 15 progenitor states were identified and 15 + 16 total colors need to be provided.
-```{r}
-res = set_color_palette(res)
-```
-
-We can plot the reconstructed fate map topology with commitment times now.
-Note that the inferred progenitor states (iP) are denoted as "Node-x" below.
+With ICE-FASE fitted, a number of progenitor states are identified as nodes in the fate map topology. We can plot the reconstructed fate map topology with commitment times now. Note that the inferred progenitor states (iP) are denoted as "Node-x" below.
 ```{r, fig.width=10, fig.height=5}
-plot_gr(gr = res$gr,
-        total_time = 15,
-        gr_node_time = res$gr_trans_time,
-        type_col = res$col_pal)
+plot_gr_clean(gr = res$gr,
+              total_time = 15,
+              gr_node_time = res$gr_trans_time,
+              type_col = res$col_pal,
+              show_node_label = T)
 ```
 
 To visualize the internal node state assignment in reconstructed phylogeny:

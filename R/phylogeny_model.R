@@ -26,10 +26,20 @@ num_gen_single_type <- function(cell_type, rtime, type_graph) {
         return(list(num_gen = num_gen,
                     diff = diff_indicator))
 }
-get_mode_counts <- function(cell_type, count, type_graph) {
-        mode_counts = round_frac(count,
-                                 type_graph$diff_mode_probs[[cell_type]])
-}
+# deprecated
+# get_mode_counts <- function(cell_type, count, type_graph) {
+#         assertthat::assert_that(count >= 2)
+#         mode_prob = type_graph$diff_mode_probs[[cell_type]]
+#         if (length(mode_prob) == 3) {
+#                 mode_min_val = c(1, 1, 0)
+#         } else if (length(mode_prob) == 6) {
+#                 mode_min_val = c(1, 1, 1, 0, 0, 0)
+#         } else {
+#                 mode_min_val = rep(0, length(mode_prob))
+#         }
+#         mode_counts = round_frac(count, mode_prob, mode_min_val)
+#         mode_counts
+# }
 distribute_mode_counts <- function(cell_type, mode_counts, type_graph) {
         # no mode 4 and 5
         assertthat::assert_that(all(mode_counts[4:5] == 0))
@@ -414,18 +424,25 @@ simulate_muts <- function(collect_gens, type_graph, mut_param) {
         }
         collect_gens
 }
-simulate_sc_data <- function(type_graph, mut_p, sample_size) {
+simulate_sc_data <- function(type_graph, mut_p, sample_size, somatic = F) {
         gens0 = make_gens(type_graph = type_graph)
         gens1 = sample_size_gens(gens0, type_graph, sample_size = sample_size)
-        mut_param = do.call(make_mut_param_by_rate_rvec, mut_p)
+        if (!somatic) {
+                mut_param = do.call(make_mut_param_by_rate_rvec, mut_p)
+        }
         # message("simluating sc..")
         gens2 = simulate_sc_muts(gens1,
                                  type_graph = type_graph,
-                                 mut_param = mut_param)
+                                 mut_param = mut_param,
+                                 somatic = somatic)
         # message("constructing true tree..")
         tr = construct_true_lineage(gens2, type_graph$tip_id)
-        x = get_barcodes(gens2, type_graph$tip_id)
-        x = remove_allele_ver(x)
+        if (somatic) {
+                x = NULL
+        } else {
+                x = get_barcodes(gens2, type_graph$tip_id)
+                x = remove_allele_ver(x)
+        }
         # this is the pre-split field size
         sampled_field_size = map_dbl(c(type_graph$node_id, type_graph$tip_id), function(x) {
                 s = gens1[[x]]$sample_size

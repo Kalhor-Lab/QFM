@@ -2,10 +2,16 @@
 % Please edit documentation in R/utils.R
 \name{scale_counts}
 \alias{scale_counts}
-\title{Scale counts based on a factor, rounded to integer, counts must be at least 1}
+\title{deprecated
+Assign counts based on total and fraction, rounded to integer
+Ensure that each category gets some minimum of counts
+Scale counts based on a factor, rounded to integer, counts must be at least 1}
 \usage{
 scale_counts(counts, z)
 }
 \description{
+deprecated
+Assign counts based on total and fraction, rounded to integer
+Ensure that each category gets some minimum of counts
 Scale counts based on a factor, rounded to integer, counts must be at least 1
 }

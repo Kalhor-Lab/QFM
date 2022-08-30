@@ -1,8 +1,5 @@
-# exp_params
-# big_graph_list
-# tr_col = "tr3"
-# gr_col = "gr3"
-# gr_eval_col = "gr3_eval"
+#' mostly deprecated functions of ICE_FASE, replaced by 'ice_fase_mod1.R'
+#' some functions are still used for processing downstream results
 make_gr_tr_data <- function(gr, tr, sc_celltypes) {
         # processed input
         # gr
@@ -108,13 +105,15 @@ get_trans_assign_tb <- function(data_obj, tr_node_assign) {
                 return(transition_list)
         }) %>% bind_rows()
 }
-est_transition_time <- function(data_obj, tr_node_assign, stat_func = median) {
+est_transition_time <- function(data_obj, tr_node_assign, stat_func = mean) {
         trans_assign_tb = get_trans_assign_tb(data_obj, tr_node_assign)
         trans_type_time = trans_assign_tb %>% group_by(in_type) %>% summarize(time = stat_func(time))
         trans_time = trans_type_time$time
         names(trans_time) = trans_type_time$in_type
         trans_time
 }
+
+
 
 # data_obj = update_edge_tb_state(data_obj, tr3_assigned_states)
 # x = "Node-3"
@@ -168,41 +167,42 @@ update_gr_trans_time <- function(data_obj, gr_trans_time) {
         return(data_obj)
 }
 
-get_edge_diff <- function(x, data_obj, trans_time) {
-        diff_time = trans_time[x]
-        gr_tip_list = data_obj$gr_tip_list
-        gr_dd = data_obj$gr_dd
-        assertthat::assert_that(!is.null(data_obj$tr_edges_state_tb))
-        edge_tb = data_obj$tr_edges_state_tb
-
-        state_include = names(gr_tip_list)[map_lgl(gr_tip_list, function(y) all(y %in% gr_tip_list[[x]]))]
-        state_include_d1 = names(gr_tip_list)[map_lgl(gr_tip_list, function(y) all(y %in% gr_tip_list[[gr_dd[[x]][1]]]))]
-        state_include_d2 = names(gr_tip_list)[map_lgl(gr_tip_list, function(y) all(y %in% gr_tip_list[[gr_dd[[x]][2]]]))]
-
-        edge_tb_diff = mutate(edge_tb, ind = map_lgl(type_path, function(y) any(state_include %in% y)))
-        edge_tb_diff = edge_tb_diff %>% filter(from_time <= diff_time &
-                                                       to_time > diff_time &
-                                                       ind)
-        edge_tb_diff = mutate(edge_tb_diff, d1_ind = map_lgl(type_path, function(y) any(state_include_d1 %in% y))) # old version gr_dd[[x]][1] (old version has been overwritten)
-        edge_tb_diff = mutate(edge_tb_diff, d2_ind = map_lgl(type_path, function(y) any(state_include_d2 %in% y)))
-        assertthat::assert_that(all(!(edge_tb_diff$d1_ind & edge_tb_diff$d2_ind)))
-        edge_tb_diff
-}
-
-get_node_size <- function(data_obj, tr_node_assign, trans_time) {
-        # data_obj = update_edge_tb_state(data_obj, tr_node_assign)
-        node_size = map(data_obj$gr$node.label, function(x) {
-                edge_diff = get_edge_diff(x, data_obj, trans_time)
-                n0 = length(unique(edge_diff$from))
-                n1 = sum(edge_diff$d1_ind)
-                n2 = sum(edge_diff$d2_ind)
-                out = c(n0, n1, n2)
-                names(out) = c(x, data_obj$gr_dd[[x]])
-                out
-        })
-        names(node_size) = data_obj$gr$node.label
-        node_size
-}
+# deprecated, replaced by new version that that involves multifurcation
+# get_edge_diff <- function(x, data_obj, trans_time) {
+#         diff_time = trans_time[x]
+#         gr_tip_list = data_obj$gr_tip_list
+#         gr_dd = data_obj$gr_dd
+#         assertthat::assert_that(!is.null(data_obj$tr_edges_state_tb))
+#         edge_tb = data_obj$tr_edges_state_tb
+#
+#         state_include = names(gr_tip_list)[map_lgl(gr_tip_list, function(y) all(y %in% gr_tip_list[[x]]))]
+#         state_include_d1 = names(gr_tip_list)[map_lgl(gr_tip_list, function(y) all(y %in% gr_tip_list[[gr_dd[[x]][1]]]))]
+#         state_include_d2 = names(gr_tip_list)[map_lgl(gr_tip_list, function(y) all(y %in% gr_tip_list[[gr_dd[[x]][2]]]))]
+#
+#         edge_tb_diff = mutate(edge_tb, ind = map_lgl(type_path, function(y) any(state_include %in% y)))
+#         edge_tb_diff = edge_tb_diff %>% filter(from_time <= diff_time &
+#                                                        to_time > diff_time &
+#                                                        ind)
+#         edge_tb_diff = mutate(edge_tb_diff, d1_ind = map_lgl(type_path, function(y) any(state_include_d1 %in% y))) # old version gr_dd[[x]][1] (old version has been overwritten)
+#         edge_tb_diff = mutate(edge_tb_diff, d2_ind = map_lgl(type_path, function(y) any(state_include_d2 %in% y)))
+#         assertthat::assert_that(all(!(edge_tb_diff$d1_ind & edge_tb_diff$d2_ind)))
+#         edge_tb_diff
+# }
+# deprecated, replaced by new version that that involves multifurcation
+# get_node_size <- function(data_obj, tr_node_assign, trans_time) {
+#         # data_obj = update_edge_tb_state(data_obj, tr_node_assign)
+#         node_size = map(data_obj$gr$node.label, function(x) {
+#                 edge_diff = get_edge_diff(x, data_obj, trans_time)
+#                 n0 = length(unique(edge_diff$from))
+#                 n1 = sum(edge_diff$d1_ind)
+#                 n2 = sum(edge_diff$d2_ind)
+#                 out = c(n0, n1, n2)
+#                 names(out) = c(x, data_obj$gr_dd[[x]])
+#                 out
+#         })
+#         names(node_size) = data_obj$gr$node.label
+#         node_size
+# }
 
 make_edge_tb <- function(tr_r) {
         tr_node_depth = node.depth.edgelength(tr_r)
@@ -337,20 +337,21 @@ filter_noise_spacers <- function(tb, noise_factor = 4) {
                 return(tb)
         }
 }
-correct_trans_time <- function(gr_trans_time, gr_tr_data) {
-        gr_node_dd = gr_tr_data$gr_dd[gr_tr_data$gr$node.label]
-        for (x in names(gr_node_dd)) {
-                if(gr_trans_time[gr_node_dd[[x]][1]] < gr_trans_time[x]) {
-                        gr_trans_time[gr_node_dd[[x]][1]] = gr_trans_time[x] + rnorm(1, mean = 0.001, sd = 0.0001)
-                        # message(paste0('corrected: ', gr_node_dd[[x]][1]))
-                }
-                if(gr_trans_time[gr_node_dd[[x]][2]] < gr_trans_time[x]) {
-                        gr_trans_time[gr_node_dd[[x]][2]] = gr_trans_time[x] + rnorm(1, mean = 0.001, sd = 0.0001)
-                        # message(paste0('corrected: ', gr_node_dd[[x]][2]))
-                }
-        }
-        return(gr_trans_time)
-}
+# deprecated, defined in new script
+# correct_trans_time <- function(gr_trans_time, gr_tr_data) {
+#         gr_node_dd = gr_tr_data$gr_dd[gr_tr_data$gr$node.label]
+#         for (x in names(gr_node_dd)) {
+#                 if(gr_trans_time[gr_node_dd[[x]][1]] < gr_trans_time[x]) {
+#                         gr_trans_time[gr_node_dd[[x]][1]] = gr_trans_time[x] + rnorm(1, mean = 0.001, sd = 0.0001)
+#                         # message(paste0('corrected: ', gr_node_dd[[x]][1]))
+#                 }
+#                 if(gr_trans_time[gr_node_dd[[x]][2]] < gr_trans_time[x]) {
+#                         gr_trans_time[gr_node_dd[[x]][2]] = gr_trans_time[x] + rnorm(1, mean = 0.001, sd = 0.0001)
+#                         # message(paste0('corrected: ', gr_node_dd[[x]][2]))
+#                 }
+#         }
+#         return(gr_trans_time)
+# }
 #' reconstructs phylogeny with phylotime, and infers quantitative fate map with ice_fase
 #' @param tr a phylogenetic tree of the "phylo" type
 #' @param sc_celltypes either a named character vector specifying types for each row in the cell_mat or a function to be applied to the rownames of the character matrix
@@ -395,6 +396,14 @@ ice_fase <- function(tr,
         tr_node_assign = assign_node_states(data_obj)
 
         gr_trans_time = est_transition_time(data_obj, tr_node_assign, stat_func = mean)
+        # cases where no node is assigned, assign parent time
+        if (any(!gr$node.label %in% names(gr_trans_time))) {
+                na_state = gr$node.label[!gr$node.label %in% names(gr_trans_time)]
+                assertthat::assert_that(all(!na_state %in% tr_node_assign))
+                gr_trans_time = gr_trans_time[gr$node.label]
+                names(gr_trans_time) = gr$node.label
+                gr_trans_time[na_state] = 0.
+        }
         gr_tip_time = rep(total_time, length(unique(cell_type_vec)))
         names(gr_tip_time) = unique(cell_type_vec)
         gr_trans_time = c(gr_trans_time, gr_tip_time)
@@ -405,6 +414,10 @@ ice_fase <- function(tr,
         gr_node_sizes = get_node_size(data_obj, tr_node_assign, gr_trans_time)
 
         out = list(tr = tr,
+                   sc_celltypes = sc_celltypes,
+                   total_time = total_time,
+                   root_time = root_time,
+                   theta = theta,
                    gr = gr,
                    gr_trans_time = gr_trans_time,
                    gr_node_sizes = gr_node_sizes,
@@ -422,7 +435,7 @@ plot_gr_data <- function(out_data, target_time, gr_col = NULL, gr_lab = NULL) {
         plot_gr(out_data$gr,
                 out_data$gr_trans_time,
                 gr_col,
-                target_time = target_time,
+                target_time,
                 node_label = gr_lab)
 }
 #' Impute missing characters from cell allele matrix
@@ -505,18 +518,19 @@ filter_cells <- function(mat, cutoff = 2, abund_thres = 1) {
         }))
         mat[rowSums(spacer_ind_mat) > cutoff, ]
 }
-set_color_palette <- function(res, palette = NULL) {
-        if (is.null(palette)) {
-                res$col_pal = gr_color(res$gr)
-        } else {
-                assertthat::assert_that(
-                        length(palette) == length(c(res$gr$node.label, res$gr$tip.label))
-                        )
-                names(palette) = c(res$gr$node.label, res$gr$tip.label)
-                res$col_pal = palette
-        }
-        res
-}
+# deprecated
+# set_color_palette <- function(res, palette = NULL) {
+#         if (is.null(palette)) {
+#                 res$col_pal = gr_color(res$gr)
+#         } else {
+#                 assertthat::assert_that(
+#                         length(palette) == length(c(res$gr$node.label, res$gr$tip.label))
+#                         )
+#                 names(palette) = c(res$gr$node.label, res$gr$tip.label)
+#                 res$col_pal = palette
+#         }
+#         res
+# }
 output_estimates <- function(res) {
         out_tb = tibble(progenitor_state = res$gr$node.label)
         out_tb$commitment_time = res$gr_trans_time[out_tb$progenitor_state]

@@ -2,10 +2,12 @@
 % Please edit documentation in R/backward_sample.R
 \name{sample_doublet_branch}
 \alias{sample_doublet_branch}
-\title{sample the number of doublet branches when dividing n cells into 2*n cell}
+\title{the stochastic coal function
+sample the number of doublet branches when dividing n cells into 2*n cell}
 \usage{
 sample_doublet_branch(n, k)
 }
 \description{
+the stochastic coal function
 sample the number of doublet branches when dividing n cells into 2*n cell
 }

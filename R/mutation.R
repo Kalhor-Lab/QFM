@@ -168,11 +168,20 @@ generate_mut_ids = function(n, mut_element, recur_ver = TRUE) {
 }
 sample_mut_num <- function(n, mut_element, duration) {
         mut_rate = mut_element$rate
-        mut_prob = 1 - dpois(0, lambda = duration * mut_rate)
+        # mut_prob = 1 - dpois(0, lambda = duration * mut_rate)
+        mut_prob = 1 - exp(- (duration * mut_rate))
         mut_num = rbinom(n = 1, size = n, prob = mut_prob)
         mut_num
 }
-
+# This functrion is deprecated, somatic mutation conditional on at least one event,
+# direct forward simulation is used instead.
+# sample_somatic_mut_num <- function(n, mut_element, duration, unmut_duration, t_total) {
+#         mut_rate = mut_element$rate
+#         mut_prob = (exp(-mut_rate * unmut_duration) - exp(-mut_rate * (unmut_duration + mut_duration))) /
+#                 (exp(-mut_rate * unmut_duration) - exp(-mut_rate * (t_total)))
+#         mut_num = rbinom(n = 1, size = n, prob = mut_prob)
+#         mut_num
+# }
 
 #' Draw one sample of the mutation counts after some time
 #' @param life_duration length of the generation
@@ -214,6 +223,25 @@ sample_all_barcodes <- function(barcodes, mut_param, start_time, end_time) {
         }
         barcodes
 }
+sample_all_barcodes_v1 <- function(barcodes, mut_param, start_time, end_time, parallel = T) {
+        assertthat::assert_that(ncol(barcodes) == length(mut_param))
+        out = do.call(cbind, future_map(1:length(mut_param), function(j) {
+                mut_el = mut_param[[j]]
+                barcode_vec = barcodes[, j]
+                u_indices = which(barcode_vec == "0")
+                if (length(u_indices) > 0) {
+                        mut_num = sample_mut_num(length(u_indices),
+                                                 mut_el,
+                                                 duration = get_mut_duration(mut_el$active_time,
+                                                                             start_time, end_time))
+                        m_indices = sample(u_indices, size = mut_num, replace = F)
+                        barcode_vec[m_indices] = generate_mut_ids(length(m_indices),
+                                                                  mut_el)
+                }
+                barcode_vec
+        }, .options = furrr_options(seed = T)))
+        out
+}
 #' get overlaps of intervals using trick on IRanges
 #' TODO: dependes on IRanges
 get_mut_duration <-  function(active_time, start_time, end_time) {
@@ -224,6 +252,52 @@ get_mut_duration <-  function(active_time, start_time, end_time) {
                                                                end = end_time * mul),
                                               ir))-1)/mul
 }
+#' deprecated function, used for somatic mutation
+#' get the total amount of time passed that the site could have mutated
+# get_unmut_duration <- function(active_time, start_time) {
+#         mul = 1e5
+#         ir = IRanges::IRanges(start = sapply(active_time, "[[", 1) * mul,
+#                               end = sapply(active_time, "[[", 2) * mul)
+#         sum(IRanges::width(IRanges::intersect(IRanges::IRanges(start = 0,
+#                                                                end = start_time * mul),
+#                                               ir))-1)/mul
+# }
+get_t_total <- function(active_time) {
+        sum(map_dbl(active_time, function(x) {
+                out = x[2] - x[1]
+                assertthat::assert_that(out > 0)
+                out
+        }))
+}
+# old version of sampling somatic barcode
+# sample_somatic_barcodes_old <- function(barcodes, mut_param, start_time, end_time) {
+#         assertthat::assert_that(ncol(barcodes) == length(mut_param))
+#         # for each element
+#         for (j in 1:length(mut_param)) {
+#                 # cells capable of mutating
+#                 u_indices = which(barcodes[, j] == "0")
+#                 if (length(u_indices) > 0) {
+#                         # number of cells mutated
+#                         mut_num = sample_somatic_mut_num(length(u_indices),
+#                                                          mut_param[[j]],
+#                                                          unmut_duration = get_unmut_duration(mut_param[[j]]$active_time,
+#                                                                                              start_time),
+#                                                          duration = get_mut_duration(mut_param[[j]]$active_time,
+#                                                                                      start_time, end_time),
+#                                                          t_total = get_t_total(mut_param[[j]]$active_time))
+#                         mut_num = sample_mut_num(length(u_indices),
+#                                                  mut_param[[j]],
+#                                                  duration = get_mut_duration(mut_param[[j]]$active_time,
+#                                                                              start_time, end_time))
+#                         m_indices = sample(u_indices, size = mut_num, replace = F)
+#                         barcodes[m_indices, j] = generate_mut_ids(length(m_indices),
+#                                                                   mut_param[[j]])
+#                 }
+#         }
+#         barcodes
+# }
+
+
 #' Draw one sample of mutation counts for all elements
 #' @export
 sample_all_mut_counts <- function(mut_counts_list, mut_param, start_time, end_time,

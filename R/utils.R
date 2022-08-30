@@ -1,10 +1,20 @@
+#' deprecated
 #' Assign counts based on total and fraction, rounded to integer
-round_frac <- function(total, prob) {
-        rounded = round(total * prob[-1])
-        out = c(total-sum(rounded), rounded)
-        names(out) = names(prob)
-        out
-}
+#' Ensure that each category gets some minimum of counts
+# round_frac <- function(total, prob, min_val = rep(0, length(prob))) {
+#         assertthat::assert_that(length(min_val) == length(prob))
+#         assertthat::assert_that(sum(min_val) <= total)
+#         n_ind = which.max(prob)[1]
+#         rounded = round(total * prob[-n_ind])
+#         rounded = pmax(rounded, min_val[-n_ind])
+#         out = numeric(length(prob))
+#         out[-n_ind] = rounded
+#         out[n_ind] = total - sum(rounded)
+#         assertthat::assert_that(out[n_ind] >= min_val[n_ind])
+#         names(out) = names(prob)
+#         out
+# }
+
 #' Scale counts based on a factor, rounded to integer, counts must be at least 1
 scale_counts <- function(counts, z) {
         assertthat::assert_that(length(counts) == length(z))
@@ -67,6 +77,17 @@ subset_mut_p <- function(mut_p, indices) {
              recur_prob = mut_p$recur_prob[indices],
              recur_vec_list = mut_p$recur_vec_list[indices])
 }
+concat_mut_p <- function(mut_p1, mut_p2) {
+        assertthat::assert_that(all.equal(mut_p1$active_time, mut_p2$active_time))
+        list(mut_rate = c(mut_p1$mut_rate, mut_p2$mut_rate),
+             active_time = mut_p1$active_time,
+             recur_prob = c(mut_p1$recur_prob, mut_p2$recur_prob),
+             recur_vec_list = c(mut_p1$recur_vec_list, mut_p2$recur_vec_list))
+}
+concat_mut_p_list <- function(mut_p_list) {
+        purrr::reduce(mut_p_list, concat_mut_p)
+}
+
 push_pdf <- function(g, file_name, width = 4, height = 4, ps = 12, dir = "../LTModelPlots/", open_file = T) {
         pdf(paste0(dir, file_name, ".pdf"), width = width, height = height, pointsize = ps)
         print(g)
@@ -104,35 +125,36 @@ compute_total_ranking <- function(gr) {
                 factorial(s1 + s2) / factorial(s1) / factorial(s2)
         }))
 }
-sample_node_ranking <- function(gr) {
-        list_out = list_dd_and_tips(name_nodes(gr))
-        gr_dd = list_out$dd
-        gr_tip_lists = list_out$tips
-        # genrate the draw for each node first
-        node_shuffle = map(gr_dd, function(x) {
-                s1 = pmax(1, length(gr_tip_lists[[x[1]]])) - 1
-                s2 = pmax(1, length(gr_tip_lists[[x[2]]])) - 1
-                sample(c(rep(x[1], s1), rep(x[2], s2)))
-        })
-        root_node = names(gr_dd)[1]
-        ranking = rep(root_node, gr$Nnode)
-        assign_dd <- function(dd) {
-                if (dd %in% gr$tip.label) {
-                        return()
-                } else {
-                        dd_indices = which(ranking == dd)
-                        if (length(dd_indices) <= 1) {
-                                return()
-                        } else {
-                                ranking[dd_indices[-1]] <<- node_shuffle[[dd]]
-                                assign_dd(gr_dd[[dd]][1])
-                                assign_dd(gr_dd[[dd]][2])
-                        }
-                }
-        }
-        assign_dd(root_node)
-        ranking
-}
+# deprecated
+# sample_node_ranking <- function(gr) {
+#         list_out = list_dd_and_tips(name_nodes(gr))
+#         gr_dd = list_out$dd
+#         gr_tip_lists = list_out$tips
+#         # genrate the draw for each node first
+#         node_shuffle = map(gr_dd, function(x) {
+#                 s1 = pmax(1, length(gr_tip_lists[[x[1]]])) - 1
+#                 s2 = pmax(1, length(gr_tip_lists[[x[2]]])) - 1
+#                 sample(c(rep(x[1], s1), rep(x[2], s2)))
+#         })
+#         root_node = names(gr_dd)[1]
+#         ranking = rep(root_node, gr$Nnode)
+#         assign_dd <- function(dd) {
+#                 if (dd %in% gr$tip.label) {
+#                         return()
+#                 } else {
+#                         dd_indices = which(ranking == dd)
+#                         if (length(dd_indices) <= 1) {
+#                                 return()
+#                         } else {
+#                                 ranking[dd_indices[-1]] <<- node_shuffle[[dd]]
+#                                 assign_dd(gr_dd[[dd]][1])
+#                                 assign_dd(gr_dd[[dd]][2])
+#                         }
+#                 }
+#         }
+#         assign_dd(root_node)
+#         ranking
+# }
 plot_legend <- function(g) {
         legend <- cowplot::get_legend(g)
         grid.newpage()

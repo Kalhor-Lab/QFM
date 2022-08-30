@@ -62,13 +62,14 @@ filter_allele_onehot <- function(x, lo_cut = 0.0, hi_cut = 1.) {
         x = x[, colSums(x) < ceiling(nrow(x)*hi_cut), drop = F]
         x
 }
-get_type_from_id <- function(id_name) {
-        out = map_chr(strsplit(id_name, "_"), function(x) {
-                ifelse(length(x) == 5, x[2], "Unknown")
-        })
-        names(out) = id_name
-        out
-}
+# deprecated
+# get_type_from_id <- function(id_name) {
+#         out = map_chr(strsplit(id_name, "_"), function(x) {
+#                 ifelse(length(x) %in% c(5, 6), x[2], "Unknown")
+#         })
+#         names(out) = id_name
+#         out
+# }
 get_time_from_id <- function(id_name, type_graph) {
         gens = make_gens(type_graph)
         id_name_sp = strsplit(id_name, "_")

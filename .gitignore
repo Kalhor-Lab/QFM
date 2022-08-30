@@ -1,7 +1,6 @@
-R_deprecated/
-R_explore/
+analysis/deprecated/
 plots/
-intermediate_data/panel/tr3/
+intermediate_data/
 data/iPSC/
 data/MARC1/
 supplementary_data/

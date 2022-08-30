@@ -1,8 +1,6 @@
-# exp_params
-# big_graph_list = all_graphs
-# tr_col = "tr"
-# gr_col = "gr"
-# gr_eval_col = "gr3_eval"
+# This script has functions for evaluation certain experiments
+# mostly deprecated functions
+
 generate_evaluate_tb <- function(exp_params, big_graph_list, tr_col, gr_col, gr_eval_col, perturb = F) {
         map(1:nrow(exp_params), function(j) {
                 message(j)
@@ -306,22 +304,6 @@ evaluate_experiment <- function(exp_obj, big_graph_list) {
              true = out_tb_true)
 }
 
-perturb_celltypes <- function(sc_celltypes, pct = 0.05, min_keep = 10) {
-        sc_celltype_counts = table(sc_celltypes)
-        perturb_size = pmin(ceiling(sc_celltype_counts * pct), pmax(sc_celltype_counts - min_keep, 0))
-        all(perturb_size <= sc_celltype_counts)
-        perturbed = unlist(map(names(perturb_size), function(x) {
-                ct_exlucde = sc_celltype_counts[names(sc_celltype_counts) != x]
-                out = sc_celltypes[sc_celltypes == x]
-                out[sample(1:length(out), size = perturb_size[x], replace = F)] =
-                        sample(names(ct_exlucde),
-                               size = perturb_size[x],
-                               prob = ct_exlucde / sum(ct_exlucde),
-                               replace = T)
-                out
-        }))
-}
-
 # TODO: needs to be updated to run in parallel
 evaluate_node_assign <- function(exp_params, big_graph_list, tr_col, gr_col, perturb = F) {
         map(1:nrow(exp_params), function(j) {
@@ -386,17 +368,16 @@ evaluate_exp_node_assign <- function(exp_obj, big_graph_list) {
         out_tb_raw
 }
 
-
-get_true_size <- function(type_graph) {
-        gens0 = make_gens(type_graph)
-        out = map_dbl(gens0[c(type_graph$node_id, type_graph$tip_id)], function(x) {
-                ifelse(x$active,
-                       x$end_count/2,
-                       x$end_count)
-        })
-        names(out) = c(type_graph$node_id, type_graph$tip_id)
-        out
-}
+# get_true_size <- function(type_graph) {
+#         gens0 = make_gens(type_graph)
+#         out = map_dbl(gens0[c(type_graph$node_id, type_graph$tip_id)], function(x) {
+#                 ifelse(x$active,
+#                        x$end_count/2,
+#                        x$end_count)
+#         })
+#         names(out) = c(type_graph$node_id, type_graph$tip_id)
+#         out
+# }
 
 make_true_gr_data <- function(type_graph) {
         gr_tips = type_graph$tip_id
@@ -415,6 +396,8 @@ make_true_gr_data <- function(type_graph) {
              gr_tip_list = gr_tip_list_true,
              gr_dd = gr_dd_true)
 }
+
+#' get mapping of inferred progenitor states to true progenitor states
 get_node_mapping <- function(data_obj, type_graph) {
         gr = data_obj$gr
         true_data_obj = make_true_gr_data(type_graph)
@@ -452,13 +435,3 @@ get_node_mapping <- function(data_obj, type_graph) {
         names(gr_node_mapped_all) = gr_node_all
         gr_node_mapped_all
 }
-
-# library(mclust)
-# classify_edges <- function(edge_tb) {
-#         mcl_out = Mclust(edge_tb$length, G = 2)
-#         mcl_mean = mcl_out$parameters$mean
-#         message(paste(c("mixture means:", mcl_mean), collapse = "_"))
-#         lo_class = names(mcl_mean)[which.min(mcl_mean)]
-#         edge_tb$class = factor(mcl_out$classification == lo_class, labels = c("high", "low"))
-#         edge_tb
-# }

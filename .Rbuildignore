@@ -4,8 +4,7 @@ supplementary_data
 data/iPSC
 data/MARC1
 metadata
-R_deprecated
-R_explore
+analysis/deprecated
 intermediate_data
 ^doc$
 ^Meta$

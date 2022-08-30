@@ -1,7 +1,7 @@
 Package: qfm
 Type: Package
 Title: Quantitative Fate Mapping with ICE-FASE and Phylotime
-Version: 0.1.0
+Version: 1.0.0
 Author: Weixiang Fang
 Maintainer: Weixiang Fang <wfang58@gmail.com>
 Description: Inference of quantitaive fate map from retrospective lineage barcode. Phylotime reconstructs time-scaled phylogeny from lineage barcodes. Given terminal cell types, ICE-FASE infers a quantitative fate map.
