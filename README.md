@@ -20,9 +20,10 @@ For a basic tutorial, check out the vignette:
 https://kalhor-lab.github.io/QFM/
 
 To reproduce results in manuscript:
-  1. MARC1 estimations ('analysis/MARC1/')
-  2. Evaluation of ICE_FASE and Phylotime on simulation of panel of fate maps ('analysis/panel/')
-  3. Process and analyze split well experiment ('analysis/splitwell/')
+  1. MARC1 estimations ('analysis/MARC1_estimation/')
+  2. Evaluation of ICE_FASE and Phylotime on simulation of panel of fate maps ('analysis/main_panel/')
+  3. Extended set of experiments evaluating ICE_FASE and Phylotime under different assumptions ('analysis/extended_experiments')
+  4. Process and analyze split well experiment ('analysis/splitwell_experiment/')
 
 Data from the manuscript can be found at:
 https://github.com/Kalhor-Lab/QFM-Data
