@@ -35,7 +35,6 @@ Imports:
         circlize (>= 0.4.12),
         RColorBrewer (>= 1.1-2),
         assertthat (>= 0.2.1)
-        treespace ()
 RoxygenNote: 7.1.2
 Suggests: 
     rmarkdown,
