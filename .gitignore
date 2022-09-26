@@ -4,6 +4,7 @@ intermediate_data/
 data/iPSC/
 data/MARC1/
 supplementary_data/
+v_docs/
 *.rds
 *.rda
 
