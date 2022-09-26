@@ -1,0 +1,7 @@
+pandoc: '2.18'
+pkgdown: 2.0.6
+pkgdown_sha: ~
+articles:
+  basic_tutorial: basic_tutorial.html
+last_built: 2022-09-22T20:45Z
+
