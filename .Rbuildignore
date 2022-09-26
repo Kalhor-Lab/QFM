@@ -8,3 +8,6 @@ analysis/deprecated
 intermediate_data
 ^doc$
 ^Meta$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$

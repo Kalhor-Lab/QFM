@@ -6,6 +6,11 @@
 \usage{
 is_zero_range(x, tol = .Machine$double.eps^0.5)
 }
+\arguments{
+\item{x}{An input vector.}
+
+\item{tol}{tolerance when comparing elements of the vector}
+}
 \description{
 Check if a vector is all the same value
 }

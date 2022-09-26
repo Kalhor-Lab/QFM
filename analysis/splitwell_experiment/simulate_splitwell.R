@@ -1,3 +1,6 @@
+library(qfm)
+library(Biostrings)
+
 # Make ground truth fate map
 root_id = "5"
 node_id = c("1", "2", "3", "4", "5")

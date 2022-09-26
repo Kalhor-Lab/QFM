@@ -1,5 +1,5 @@
-job_id = as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID'))
 library(qfm)
+job_id = as.numeric(Sys.getenv('SLURM_ARRAY_TASK_ID'))
 output_dir = "./output/"
 # exp_name = "5rep_mut_all"
 exp_name = "20rep_16type"
@@ -53,11 +53,6 @@ batch_assign = ceiling((1:3310)/100)
 batch_indices = which(batch_assign == job_id)
 
 library(qfm)
-source("../R_mod/mod2_v2.R")
-source("../R_mod/ice_fase_mod1.R")
-source("../R_mod/plotting.R")
-source("../R_mod/exp_pipeline.R")
-
 # output_dir = "../phylotime_runs/panel_mod2_v1/5rep_mut_all/"
 # tree_panel = readRDS("./output/tree_panel.rds")
 # mut_flat_tb = readRDS(paste0(output_dir, "mut_flat_all.rds"))

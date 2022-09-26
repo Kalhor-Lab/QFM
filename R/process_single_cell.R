@@ -208,64 +208,66 @@ get_next <- function(y, edges_list) {
                     length = l,
                     tip = FALSE))
 }
-construct_true_lineage <- function(gens1, tip_id) {
-        nodes_df = collect_nodes(gens1, tip_id)
-        edges_df = collect_edges(gens1)
+#' deprecated now (repplaced by mod2)
+# construct_true_lineage <- function(gens1, tip_id) {
+#         nodes_df = collect_nodes(gens1, tip_id)
+#         edges_df = collect_edges(gens1)
+#
+#         edges_df = add_edge_length(edges_df, nodes_df)
+#         edges_list = split(as.data.table(edges_df), edges_df$in_node)
+#         # each element is a progenitor
+#         x_cell = edges_df[1, "in_node"]
+#         while (nrow(edges_list[[x_cell]]) == 1) {
+#                 x_cell = edges_list[[x_cell]]$out_node
+#         }
+#         sp0 = list(edges_list[[x_cell]][1, ],
+#                    edges_list[[x_cell]][2, ])
+#         n_tip = 0
+#         node_count = 0
+#         edges_simple_collect = list()
+#         while(TRUE) {
+#                 # p0 = bplapply(sp0, get_next, edges_list = edges_list, BPPARAM = bp_param)
+#                 p0 = lapply(sp0, get_next, edges_list = edges_list)
+#                 # for (x in sp0) {
+#                 #         print(x)
+#                 #         get_next(x, edges_list = edges_list)
+#                 # }
+#                 # table(sapply(p0, "[[", "tip"))
+#                 # as.character(sapply(p0, "[[", "node"))
+#                 # table(sapply(p0, "[[", "length"))
+#
+#                 # p0 = clusterApply(cl, sp0, get_next, edges_list = edges_list)
+#                 edges_simple_collect = append(edges_simple_collect,
+#                                               list(do.call(rbind, mapply(function(x, y) c(in_node = as.character(x$in_node),
+#                                                                                           out_node = y$node,
+#                                                                                           length = y$length),
+#                                                                          sp0, p0, SIMPLIFY = F))))
+#                 p0_node = p0[!sapply(p0, "[[", "tip")]
+#                 tip_count = sum(sapply(p0, "[[", "tip"))
+#                 node_count = length(p0_node)
+#                 n_tip = n_tip + tip_count
+#                 message(paste0("merging_node: ", node_count))
+#                 if (length(p0_node) > 0) {
+#                         sp1 = do.call(c, lapply(edges_list[as.character(sapply(p0_node, "[[", "node"))],
+#                                                 function(x) list(x[1, ], x[2, ])))
+#                         sp0 = sp1
+#                 } else {
+#                         assertthat::assert_that(sum(nodes_df$leaf) == n_tip)
+#                         break()
+#                 }
+#         }
+#         edges_df_simple = data.frame(do.call(rbind, edges_simple_collect))
+#         edges_df_simple$length = as.numeric(as.character(edges_df_simple$length))
+#         edges_df_simple$in_node = as.character(edges_df_simple$in_node)
+#         edges_df_simple$out_node = as.character(edges_df_simple$out_node)
+#
+#         tr_nw = edges_df_to_newick(edges_df_simple, nodes_df)
+#         tr_nw = paste0(tr_nw, nodes_df[1, 'double_time'], ";")
+#         tr = ape::read.tree(text=tr_nw)
+#         tr
+# }
 
-        edges_df = add_edge_length(edges_df, nodes_df)
-        edges_list = split(as.data.table(edges_df), edges_df$in_node)
-        # each element is a progenitor
-        x_cell = edges_df[1, "in_node"]
-        while (nrow(edges_list[[x_cell]]) == 1) {
-                x_cell = edges_list[[x_cell]]$out_node
-        }
-        sp0 = list(edges_list[[x_cell]][1, ],
-                   edges_list[[x_cell]][2, ])
-        n_tip = 0
-        node_count = 0
-        edges_simple_collect = list()
-        while(TRUE) {
-                # p0 = bplapply(sp0, get_next, edges_list = edges_list, BPPARAM = bp_param)
-                p0 = lapply(sp0, get_next, edges_list = edges_list)
-                # for (x in sp0) {
-                #         print(x)
-                #         get_next(x, edges_list = edges_list)
-                # }
-                # table(sapply(p0, "[[", "tip"))
-                # as.character(sapply(p0, "[[", "node"))
-                # table(sapply(p0, "[[", "length"))
-
-                # p0 = clusterApply(cl, sp0, get_next, edges_list = edges_list)
-                edges_simple_collect = append(edges_simple_collect,
-                                              list(do.call(rbind, mapply(function(x, y) c(in_node = as.character(x$in_node),
-                                                                                          out_node = y$node,
-                                                                                          length = y$length),
-                                                                         sp0, p0, SIMPLIFY = F))))
-                p0_node = p0[!sapply(p0, "[[", "tip")]
-                tip_count = sum(sapply(p0, "[[", "tip"))
-                node_count = length(p0_node)
-                n_tip = n_tip + tip_count
-                message(paste0("merging_node: ", node_count))
-                if (length(p0_node) > 0) {
-                        sp1 = do.call(c, lapply(edges_list[as.character(sapply(p0_node, "[[", "node"))],
-                                                function(x) list(x[1, ], x[2, ])))
-                        sp0 = sp1
-                } else {
-                        assertthat::assert_that(sum(nodes_df$leaf) == n_tip)
-                        break()
-                }
-        }
-        edges_df_simple = data.frame(do.call(rbind, edges_simple_collect))
-        edges_df_simple$length = as.numeric(as.character(edges_df_simple$length))
-        edges_df_simple$in_node = as.character(edges_df_simple$in_node)
-        edges_df_simple$out_node = as.character(edges_df_simple$out_node)
-
-        tr_nw = edges_df_to_newick(edges_df_simple, nodes_df)
-        tr_nw = paste0(tr_nw, nodes_df[1, 'double_time'], ";")
-        tr = ape::read.tree(text=tr_nw)
-        tr
-}
-
+#' deprecated but no mod2 available now
 construct_true_lineage_multi <- function(gens1, tip_id) {
         nodes_df = collect_nodes(gens1, tip_id)
         edges_df = collect_edges(gens1)

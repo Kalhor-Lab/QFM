@@ -281,19 +281,6 @@ ice_fase_mod <- function(tr,
                          root_time = 0,
                          theta = 0.0,
                          gr = NULL) {
-        # nrounds = 20,
-        # max_depth = 4,
-        # remove_uniform = F,
-        # time_stat_func = mean) {
-        # if (remove_uniform) {
-        #         cell_mat = remove_uniform_id(cell_mat)
-        # }
-        # mut_p = estimate_mut_p(cell_mat, total_time)
-        # mat_im = impute_characters(cell_mat, nrounds = nrounds, max_depth = max_depth)
-        #
-        # tr_upgma = phylotime(mat_im[sample(nrow(mat_im)), ],
-        #                      mut_p = mut_p,
-        #                      total_time)
         tr = name_nodes(tr)
         if (is.character(sc_celltypes)) {
                 assertthat::assert_that(!is.null(names(sc_celltypes)),
@@ -378,77 +365,3 @@ plot_gr_data_mod1 <- function(out_data, target_time, gr_col = out_data$col_pal, 
                 type_col = gr_col,
                 node_label = gr_lab)
 }
-# this is deprecated, use ice_fase_mod instead
-# when topology is known
-# ice_fase_mod_gr <- function(tr,
-#                             sc_celltypes,
-#                             gr,
-#                             total_time,
-#                             root_time = 0,
-#                             theta = 0.0) {
-#         # nrounds = 20,
-#         # max_depth = 4,
-#         # remove_uniform = F,
-#         # time_stat_func = mean) {
-#         # if (remove_uniform) {
-#         #         cell_mat = remove_uniform_id(cell_mat)
-#         # }
-#         # mut_p = estimate_mut_p(cell_mat, total_time)
-#         # mat_im = impute_characters(cell_mat, nrounds = nrounds, max_depth = max_depth)
-#         #
-#         # tr_upgma = phylotime(mat_im[sample(nrow(mat_im)), ],
-#         #                      mut_p = mut_p,
-#         #                      total_time)
-#         tr = name_nodes(tr)
-#         if (is.character(sc_celltypes)) {
-#                 assertthat::assert_that(!is.null(names(sc_celltypes)),
-#                                         msg = "cell types must be named.")
-#                 assertthat::assert_that(all(tr$tip.label %in% names(sc_celltypes)))
-#                 cell_type_vec = sc_celltypes
-#         } else {
-#                 assertthat::assert_that(class(sc_celltypes) == "function")
-#                 cell_type_vec = sc_celltypes(tr$tip.label)
-#                 names(cell_type_vec) = rownames(tr$tip.label)
-#         }
-#         # gr = name_nodes(reconstruct_graph(tr,
-#         #                                   sc_celltypes = cell_type_vec,
-#         #                                   theta = theta,
-#         #                                   total_time = total_time,
-#         #                                   stat_func = mean))
-#         data_obj = make_gr_tr_data(gr, tr, cell_type_vec)
-#         tr_node_assign = assign_node_states(data_obj)
-#
-#         gr_trans_time = est_transition_time(data_obj, tr_node_assign, stat_func = mean)
-#         # cases where no node is assigned, assign parent time
-#         if (any(!gr$node.label %in% names(gr_trans_time))) {
-#                 na_state = gr$node.label[!gr$node.label %in% names(gr_trans_time)]
-#                 assertthat::assert_that(all(!na_state %in% tr_node_assign))
-#                 gr_trans_time = gr_trans_time[gr$node.label]
-#                 names(gr_trans_time) = gr$node.label
-#                 gr_trans_time[na_state] = 0.
-#         }
-#         gr_tip_time = rep(total_time, length(unique(cell_type_vec)))
-#         names(gr_tip_time) = unique(cell_type_vec)
-#         gr_trans_time = c(gr_trans_time, gr_tip_time)
-#         gr_trans_time = correct_trans_time(gr_trans_time, data_obj)
-#         gr_trans_time_root = gr_trans_time + root_time
-#
-#         data_obj = update_edge_tb_state(data_obj, tr_node_assign)
-#         gr_node_sizes = get_node_size(data_obj, tr_node_assign, gr_trans_time)
-#
-#         out = list(tr = tr,
-#                    sc_celltypes = sc_celltypes,
-#                    total_time = total_time,
-#                    root_time = root_time,
-#                    theta = theta,
-#                    gr = gr,
-#                    gr_trans_time = gr_trans_time_root,
-#                    gr_node_sizes = gr_node_sizes,
-#                    tr_node_assign = tr_node_assign,
-#                    gr_tr_data = data_obj)
-#         class(out) = "ice_fase_results"
-#         out = set_color_palette(out)
-#         out
-# }
-
-

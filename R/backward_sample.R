@@ -1,3 +1,4 @@
+# functions for simulating
 # log choose
 log_choose <- function(n, x) {
         return(lgamma(n+1) - lgamma(n-x+1) - lgamma(x+1))

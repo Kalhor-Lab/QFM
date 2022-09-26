@@ -2,10 +2,13 @@
 % Please edit documentation in R/utils.R
 \name{rstoc}
 \alias{rstoc}
-\title{Stochastic roundind, results all at least 1}
+\title{Round a number stochasticly, returns integer greater than or equal to one.}
 \usage{
 rstoc(x)
 }
+\arguments{
+\item{x}{integer}
+}
 \description{
-Stochastic roundind, results all at least 1
+Round a number stochasticly, returns integer greater than or equal to one.
 }

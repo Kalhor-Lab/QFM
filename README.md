@@ -9,8 +9,7 @@ if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 BiocManager::install(version = "3.14")
 
-# install two dependencies from Bioconductor
-BiocManager::install("Biostrings")
+# install dependencies from Bioconductor
 BiocManager::install("ComplexHeatmap")
 
 devtools::install_github("Kalhor-Lab/QFM")

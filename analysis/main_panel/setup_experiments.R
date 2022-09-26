@@ -16,7 +16,7 @@ mut_p_all = concat_mut_p_list(list(sample_mutp(14, c(0.6, 11.5), "fast"),
                                    sample_mutp(36, c(0.6, 11.5), "mid")))
 saveRDS(mut_p_all, file = paste0(output_dir, "mut_p_marc1.rds"))
 
-# set of experiments with 20 replicates of 16-type fate maps
+# set of experiments with 5 replicates
 exp_name = "5rep_mut_all"
 exp_params = expand.grid(big_graph_id = 1:nrow(tree_panel),
                          sample_size = c(100),
@@ -35,7 +35,7 @@ saveRDS(exp_params, file = paste0(output_dir, "exp_data_", exp_name, ".rds"))
 
 
 # indices of a different set of barcoding sites from "mut_p_all.rds" above
-#TODO: slow and fast need to be swapped, manuualy fixed now
+# NOTE: slow and fast need to be swapped, manuualy fixed now
 all_mut_indices = bind_rows(as_tibble(expand.grid(num_element = c(25, 50, 100),
                                                   class = c("slow", "mid", "fast"))),
                             tibble(num_element = c(250, 500, 1000),

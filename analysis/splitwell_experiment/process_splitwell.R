@@ -1,7 +1,7 @@
 library(qfm)
+library(Biostrings)
 # conflicted::conflict_prefer("purrr::reduce", "purrr")
 # conflicted::conflict_prefer("filter", "dplyr")
-
 set.seed(121)
 get_type <- function(x) {
         out = str_match(x, pattern = "(G\\d)T(\\d)D(.*)")[, 3]
@@ -94,13 +94,13 @@ all_samples = filter(all_samples, cell_index != "NATNADNA")
 # }
 ##### end merging ####
 
-# Now read the processed files from combined data
+# read the processed files from combined data
 all_samples_nest = all_samples %>% nest(nested = -cell_index)
 all_samples_nest$filtered_file = paste0("./data/iPSC/combined/4-pair_filtering/",
                                         all_samples_nest$cell_index,
                                         "_filteredpairs.txt")
 
-# Additional test plate data
+# loading additional test plate data
 data_files_test_plate = list.files(path = "./data/iPSC/G1_testplate/4-pair_filtering/",
                                    pat = ".*_filteredpairs\\.txt", full = T)
 data_match_test_plate = str_match(basename(data_files_test_plate), "(c\\d+)-T1A-KL-CB11-SCtest_filteredpairs\\.txt")
@@ -122,6 +122,7 @@ all_samples_nest$processed_data = map(all_samples_nest$filtered_file,
 
 all_samples_unest = select(all_samples_nest, cell_index, processed_data) %>% unnest(processed_data)
 
+# loading parent files
 parent_file = "./data/iPSC/EC96Lin12-PBGeno_filteredpairs.txt"
 parent_data = read_id_spacer_counts(parent_file) %>%
         nest(spacer = c(spacer, count)) %>%
@@ -129,7 +130,6 @@ parent_data = read_id_spacer_counts(parent_file) %>%
 
 
 spacer_unmutated_GCCAAAAGCT = "GAAACACCGGTGGTCGCCGTGGAGAGTGGTGGGGTTAGAGCTAGAAATAG"
-
 all_sample_id = all_samples_unest %>% group_by(id) %>% summarize(total = n()) %>% arrange(desc(total))
 all_sample_id$parent = all_sample_id$id %in% c(parent_data$id, "GCCAAAAGCT")
 print(all_sample_id, n = 35) # checking all the IDs
@@ -636,31 +636,4 @@ gather(mr_tb[1:5], key = "Day", value = "Percent", -c(hgRNA)) %>%
 
 plot(mr_sc_est[1:31], mr_vec[1:31])
 abline(0, 1)
-
-# explore the detailed plots on the experiment data
-# tr = g1_out$gr_tr_data$tr
-# gr = g1_out$gr_tr_data$gr
-# tip_time = rep(14, 6)
-# names(tip_time) = as.character((-1):(-6))
-#
-# tr_node_assign = g1_out$tr_node_assign
-# g_tr = as.igraph(tr)
-# tr_node_time = node.depth.edgelength(tr)
-# names(tr_node_time) = c(tr$tip.label, tr$node.label)
-# V(g_tr)$time = tr_node_time[V(g_tr)$name]
-# V(g_tr)$type = tr_node_assign[V(g_tr)$name]
-#
-# g_tr = set.edge.attribute(g_tr,
-#                           name = "ending",
-#                           index=  unlist(incident_edges(g_tr, tr$tip.label, mode = "in")),
-#                           value = T)
-# E(g_tr)$ending[is.na(E(g_tr)$ending)] = F
-#
-# g1 = ggraph(g_tr, layout = "dendrogram", height = time) +
-#         geom_edge_diagonal(aes(alpha = ending, width = ending), color = "black") +
-#         geom_node_point(aes(color = type), size = 1.) +
-#         scale_edge_alpha_manual(values = c(0.5, 0.25)) +
-#         scale_edge_width_manual(values = c(0.2, 0.05)) +
-#         ylim(c(15, 0)) + ylab("")
-# push_png(g1 + g_theme, file_name = "g1_tr_node_assign", w = 20, h = 3.5, res = 1200, dir = plot_dir)
 

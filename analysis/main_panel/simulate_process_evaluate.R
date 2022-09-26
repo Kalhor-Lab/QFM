@@ -275,10 +275,6 @@ bind_rows(tibble(method = "Clonal coupling score",
 library(phylogram)
 library(dendextend)
 evalute_gr(gr, tree_panel$gr[[1]])
-
-
-# exp_params = run_fase_eval(exp_params, tree_panel)
-
 # when absolute size is small, mean fase can be wrong by chance
 fase_eval_all = bind_rows(map(1:nrow(exp_params), function(i) {
         mutate(exp_params$fase_eval[[i]], exp_id = i)
@@ -745,87 +741,4 @@ x2 = eval_tb_true_sum %>% ggscatter(x = "mean_log2_sampling", y = "kc0", facet.b
         geom_smooth()
 
 x1 / x2
-
-
-
-
-# total_time = 11.5 - 0.6
-# for (j in 1:nrow(exp_params)) {
-#         message(j)
-#         print(paste0("Ntip: ", length(all_graphs[[exp_params$big_graph_id[j]]]$tip_id)))
-#         tr3 = name_nodes(phylotime(exp_params$sc[[j]], total_time, mut_p = exp_params1$mut_p[[j]]))
-#         saveRDS(tr3,
-#                 file = paste0(output_dir, "temp_tr3/", stringr::str_pad(j, width = 3, side = "left", "0")))
-# }
-# exp_params = mutate(exp_params, tr3 = map2(sc, mut_p, function(x, m) {
-#         name_nodes(phylotime(x, total_time, mut_p = m))
-# }))
-# saveRDS(exp_params, file = paste0(output_dir, "exp_data_proc.rds"))
-
-
-xx[xx$from_type == "Node-1" & xx$to_type != "Node-1", ]
-
-# test edge depth function
-tr = gr_tr_data$tr
-tr_time_alt = gr_tr_data$tr_edges_tb$to_time
-names(tr_time_alt) = gr_tr_data$tr_edges_tb$to
-
-tr_node_depth = node.depth.edgelength(tr)
-names(tr_node_depth) = c(tr$tip.label, tr$node.label)
-
-tr_node_depth[["type_15_gen_0_1"]]
-
-gr_tr_data$tr_edges_tb[gr_tr_data$tr_edges_tb$from == "type_15_gen_0_1", ]
-gr_tr_data$tr_edges_tb[gr_tr_data$tr_edges_tb$from == "type_15_gen_1_2", ]
-
-plot(tr_time_alt[names(tr_node_depth)], tr_node_depth)
-abline(0, 1)
-
-qplot(sort(node.depth.edgelength(as.phylo_mod2.type_graph(type_graph))) + 2.4,
-      sort(get_true_diff_time_mod3(type_graph)) + 0.6) +
-        geom_abline(slope = 1, intercept = 0.)
-
-qplot(sort(exp_obj$gr_trans_time), sort(get_true_diff_time_mod3(type_graph))) +
-        geom_abline(slope = 1, intercept = 0.)
-
-
-# trying to resolve the small timing error here
-# clarify definitions and check each function
-# First, each node is one-to-one with an edge that lead to it, the edge has "to" field being the node
-# the potency of the node is determined by its subtree
-# the time of a node is defined as the end time of the edge
-
-# For state "15", fate becomes pure at time 3.0, true commitment time is 2.4
-# the true diff time is for type "15" is 2.4
-# get_true_diff_time_mod3(type_graph)
-
-# now are the ICE nodes correctly identified? should be gen3. Seems correct
-
-
-
-# for example: type_15_gen_3_1 is an ICE node, its node time is the commitment time
-#
-
-# output data for batch phylotime
-exp_params$target_time = map_dbl(exp_params$big_graph_id, function(graph_id) tree_panel$type_graph[[graph_id]]$target_time)
-push_sc_tb <- function(exp_params, dir) {
-        out = select(exp_params,
-                     sc, `target_time`, mut_p,
-                     big_graph_id, sample_size, num_element, sampling, i_sim,
-                     bsum, num_tip)
-        saveRDS(out, file = paste0(dir, "phylotime_input.rds"))
-}
-push_sc_tb(exp_params, output_dir)
-run_batch_phylotime <- function(exp_params, i, output_dir ,root_edge = 0.6) {
-        if (!dir.exists(output_dir)) {
-                dir.create(output_dir)
-        }
-        tr = phylotime(exp_params$sc[[i]],
-                       t_total = exp_params$target_time[i] - root_edge,
-                       mut_p = exp_params$mut_p[[i]],
-                       parallel = T)
-        out_file = paste0(output_dir, stringr::str_pad(i, width = 4, pad = "0"), ".rds")
-        saveRDS(tr, file = out_file)
-}
-run_batch_phylotime(exp_params, 1, paste0(output_dir, "tr3/"))
 

@@ -2,10 +2,10 @@
 % Please edit documentation in R/utils.R
 \name{check_n_identity}
 \alias{check_n_identity}
-\title{compare if two strings are identical other than N characters}
+\title{Compre if two strings are identical other than 'N' characters}
 \usage{
 check_n_identity(str_n, str_ref)
 }
 \description{
-compare if two strings are identical other than N characters
+Compre if two strings are identical other than 'N' characters
 }

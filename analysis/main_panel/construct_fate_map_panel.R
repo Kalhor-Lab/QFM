@@ -6,12 +6,13 @@ plan(multisession, workers = 6)
 source("R/graph_construction.R") # modified
 source("analysis/panel/sample_MARC1_hgRNA.R")
 
-# *****
+####
 output_dir = "./intermediate_data/panel_mod2_v1/"
 plot_dir = "./plots/panel_mod2_v1/"
 # dir.create(output_dir)
 # dir.create(plot_dir)
-# *****
+####
+
 make_type_graph_wrap <- function(num_tip, num_rep = 1000) {
         message(paste0('running num_tip: ', num_tip))
         bal_tbr = future_map(1:num_rep, function(i) {

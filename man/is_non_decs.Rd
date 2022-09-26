@@ -6,6 +6,9 @@
 \usage{
 is_non_decs(vec)
 }
+\arguments{
+\item{vec}{An input vector.}
+}
 \description{
 Check if a vector is non-decreasing
 }
