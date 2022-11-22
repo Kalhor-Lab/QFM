@@ -21,7 +21,7 @@ https://kalhor-lab.github.io/QFM/articles/basic_tutorial.html
 To reproduce results in manuscript: Check 'analysis/' folder.
 
 Data from the manuscript can be found at:
-https://github.com/Kalhor-Lab/QFM-Data
+<a href="https://doi.org/10.5281/zenodo.7112097"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.7112097.svg" alt="DOI"></a>
 
 Report bugs and provide suggestions by sending email to:
 
