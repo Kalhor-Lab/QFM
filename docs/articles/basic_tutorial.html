@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="description" content="qfm">
 <title>Basic tutorial on Quantitative Fate Mapping (QFM) • qfm</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<script src="../deps/jquery-3.5.1/jquery-3.5.1.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.1.3/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.1.3/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
@@ -42,6 +42,8 @@
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="../articles/basic_tutorial.html">Basic tutorial on Quantitative Fate Mapping (QFM)</a>
+    <a class="dropdown-item" href="../articles/operations.html">Operations for count graphs</a>
+    <a class="dropdown-item" href="../articles/simulate_phylogeny_and_barcodes.html">Simulating cell phylogeny and lineage barcodes from QFM</a>
   </div>
 </li>
       </ul>
@@ -85,20 +87,20 @@ commitment biases.</p>
 <code class="sourceCode R"><span><span class="co"># read mutant allele matrix</span></span>
 <span><span class="va">cell_allele_table</span> <span class="op">=</span> <span class="fu">readr</span><span class="fu">::</span><span class="fu"><a href="https://readr.tidyverse.org/reference/read_delim.html" class="external-link">read_csv</a></span><span class="op">(</span><span class="st">"../data/example/mutant_allele_matrix.csv"</span><span class="op">)</span></span>
 <span><span class="va">cell_allele_table</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1,600 × 5</span></span></span>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 1,600 x 5</span></span></span>
 <span><span class="co">##    cell         type  Site_1       Site_2 Site_3     </span></span>
-<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> Type1_Cell1  Type1 Site1_Mut22  0      Site3_Mut28</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> Type1_Cell2  Type1 Site1_Mut102 0      Site3_Mut1 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> Type1_Cell3  Type1 Site1_Mut2   0      Site3_Mut1 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> Type1_Cell4  Type1 0            0      Site3_Mut1 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> Type1_Cell5  Type1 0            0      Site3_Mut84</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> Type1_Cell6  Type1 0            0      Site3_Mut1 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> Type1_Cell7  Type1 0            0      Site3_Mut8 </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> Type1_Cell8  Type1 Site1_Mut4   0      Site3_Mut13</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> Type1_Cell9  Type1 Site1_Mut22  0      Site3_Mut28</span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> Type1_Cell10 Type1 Site1_Mut22  0      Site3_Mut28</span></span>
-<span><span class="co">## <span style="color: #949494;"># … with 1,590 more rows</span></span></span></code></pre>
+<span><span class="co">##    <span style="color: #949494;font-style: italic;">&lt;chr&gt;</span><span>        </span><span style="color: #949494;font-style: italic;">&lt;chr&gt;</span><span> </span><span style="color: #949494;font-style: italic;">&lt;chr&gt;</span><span>        </span><span style="color: #949494;font-style: italic;">&lt;chr&gt;</span><span>  </span><span style="color: #949494;font-style: italic;">&lt;chr&gt;</span><span>      </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span><span> Type1_Cell1  Type1 Site1_Mut22  0      Site3_Mut28</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span><span> Type1_Cell2  Type1 Site1_Mut102 0      Site3_Mut1 </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span><span> Type1_Cell3  Type1 Site1_Mut2   0      Site3_Mut1 </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span><span> Type1_Cell4  Type1 0            0      Site3_Mut1 </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span><span> Type1_Cell5  Type1 0            0      Site3_Mut84</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span><span> Type1_Cell6  Type1 0            0      Site3_Mut1 </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span><span> Type1_Cell7  Type1 0            0      Site3_Mut8 </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span><span> Type1_Cell8  Type1 Site1_Mut4   0      Site3_Mut13</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span><span> Type1_Cell9  Type1 Site1_Mut22  0      Site3_Mut28</span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span><span> Type1_Cell10 Type1 Site1_Mut22  0      Site3_Mut28</span></span></span>
+<span><span class="co">## <span style="color: #949494;"># ... with 1,590 more rows</span></span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="running-phylotime">Running Phylotime<a class="anchor" aria-label="anchor" href="#running-phylotime"></a>
@@ -126,7 +128,7 @@ collected at 15 days.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">chr_mat</span><span class="op">)</span> <span class="op">=</span> <span class="va">cell_allele_table</span><span class="op">$</span><span class="va">cell</span></span>
 <span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/DavisVaughan/furrr" class="external-link">furrr</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="va">multisession</span>, workers <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/future/man/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="va">multisession</span>, workers <span class="op">=</span> <span class="fl">8</span><span class="op">)</span></span>
 <span><span class="va">tr</span> <span class="op">=</span> <span class="fu"><a href="../reference/phylotime.html">phylotime</a></span><span class="op">(</span><span class="va">chr_mat</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">50</span><span class="op">]</span>, t_total <span class="op">=</span> <span class="fl">15.</span> <span class="op">-</span> <span class="fl">0.6</span><span class="op">)</span></span></code></pre></div>
 <p>Now to visualize the reconstructed tree with the lineage
 barcodes:</p>
@@ -189,38 +191,34 @@ phylogeny:</p>
 To visualize distribution of Inferred Commitment Event (ICE) times:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">plot_ice_times</span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning: It is deprecated to specify `guide = FALSE` to remove a guide. Please</span></span>
-<span><span class="co">## use `guide = "none"` instead.</span></span></code></pre>
 <p><img src="basic_tutorial_files/figure-html/unnamed-chunk-9-1.png" width="768"></p>
 <p>To visualize progenitor population sizes:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">plot_node_sizes</span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning: It is deprecated to specify `guide = FALSE` to remove a guide. Please</span></span>
-<span><span class="co">## use `guide = "none"` instead.</span></span></code></pre>
 <p><img src="basic_tutorial_files/figure-html/unnamed-chunk-10-1.png" width="768"></p>
 <p>Finally, we can get a summary table for the progenitor state
 estimates:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">output_estimates</span><span class="op">(</span><span class="va">res</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 15 × 9</span></span></span>
+<pre><code><span><span class="co">## <span style="color: #949494;"># A tibble: 15 x 9</span></span></span>
 <span><span class="co">##    progenitor_state commitment_time population_size downstream_state1</span></span>
-<span><span class="co">##    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 1</span> Node-1                      2.37              13 Node-2           </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 2</span> Node-2                      5.03             149 Node-9           </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 3</span> Node-3                      2.92              23 Node-4           </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 4</span> Node-4                      5.08              95 Type6            </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 5</span> Node-5                      3.85              73 Node-6           </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 6</span> Node-6                      5.50             101 Type7            </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 7</span> Node-7                      4.92             159 Type16           </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 8</span> Node-8                      5.74             239 Type15           </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;"> 9</span> Node-9                      6.38             124 Type3            </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">10</span> Node-10                     5.92             133 Type2            </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">11</span> Node-11                     6.34             280 Type14           </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">12</span> Node-12                     6.66             267 Type12           </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">13</span> Node-13                     6.66             214 Type13           </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">14</span> Node-14                     6.97             182 Type9            </span></span>
-<span><span class="co">## <span style="color: #BCBCBC;">15</span> Node-15                     6.98             117 Type11           </span></span>
-<span><span class="co">## <span style="color: #949494;"># … with 5 more variables: downstream_size1 &lt;dbl&gt;, downstream_state2 &lt;chr&gt;,</span></span></span>
+<span><span class="co">##    <span style="color: #949494;font-style: italic;">&lt;chr&gt;</span><span>                      </span><span style="color: #949494;font-style: italic;">&lt;dbl&gt;</span><span>           </span><span style="color: #949494;font-style: italic;">&lt;dbl&gt;</span><span> </span><span style="color: #949494;font-style: italic;">&lt;chr&gt;</span><span>            </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 1</span><span> Node-1                      2.37              13 Node-2           </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 2</span><span> Node-2                      5.03             149 Node-9           </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 3</span><span> Node-3                      2.92              23 Node-4           </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 4</span><span> Node-4                      5.08              95 Type6            </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 5</span><span> Node-5                      3.85              73 Node-6           </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 6</span><span> Node-6                      5.50             101 Type7            </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 7</span><span> Node-7                      4.92             159 Type16           </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 8</span><span> Node-8                      5.74             239 Type15           </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;"> 9</span><span> Node-9                      6.38             124 Type3            </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">10</span><span> Node-10                     5.92             133 Type1            </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">11</span><span> Node-11                     6.34             280 Type14           </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">12</span><span> Node-12                     6.66             267 Type12           </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">13</span><span> Node-13                     6.66             214 Type13           </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">14</span><span> Node-14                     6.97             182 Type9            </span></span></span>
+<span><span class="co">## <span style="color: #BCBCBC;">15</span><span> Node-15                     6.98             117 Type11           </span></span></span>
+<span><span class="co">## <span style="color: #949494;"># ... with 5 more variables: downstream_size1 &lt;dbl&gt;, downstream_state2 &lt;chr&gt;,</span></span></span>
 <span><span class="co">## <span style="color: #949494;">#   downstream_size2 &lt;dbl&gt;, commitment_bias1 &lt;dbl&gt;, commitment_bias2 &lt;dbl&gt;</span></span></span></code></pre>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

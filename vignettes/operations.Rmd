@@ -1,0 +1,43 @@
+---
+title: "Operations for count graphs"
+author: "Weixiang Fang"
+date: "10/27/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(qfm)
+```
+
+## Operations implemented for count graphs
+``` {r}
+# Split
+N = 100
+p_vec = c(0.5, 0.2, 0.15, 0.1, 0.04, 0.01)
+m_vec = c(2, 2, 2, 2, 2, 2)
+round_frac(N, p_vec, m_vec)
+
+# Stochastic split
+S = 100
+N_vec = c(100, 200, 300)
+extraDistr::rmvhyper(nn = 1,
+                     n = N_vec,
+                     k = S)[1, ]
+
+# Stochastic coalescence
+S = 15
+N = 10
+C = sample_doublet_branch(N, S)
+S_ = S - C
+S_
+
+# Stochastic asymm coal
+S1 = 5
+S2 = 8
+N = 10
+C = sample_doublet_twotype(N, S1, S2)
+S_ = S1 + S2 - C
+S_
+```
+
+

@@ -1,0 +1,73 @@
+---
+title: "Simulating cell phylogeny and lineage barcodes from QFM"
+author: "Weixiang Fang"
+date: '2022-11-23'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+We take one fate map from our previously constructed panel as an example. 
+```{r, message=FALSE, warning=FALSE}
+library(qfm)
+# load the panel of fate maps
+tree_panel = readRDS("../data/example/tree_panel.rds")
+type_graph = tree_panel$type_graph[[5]]
+```
+
+First, we generate a color scheme and visualize the topology and commitment times.
+```{r}
+col_vec = gr_color_v1(type_graph)
+plot_type_graph_clean_mod2(type_graph,
+                           node_col_mapper = function(x) col_vec[x],
+                           show_node_text = T)
+```
+
+Next, we load lineage barcoding parameters that involve 50 independent barcoding sites. Using this data, we simulate cell phylogeny and lineage barcodes, sampling 100 cells from each terminal cell types.
+In order to sample a different number of cells from each type, a named numeric vector can be provided to the `sample_size` argument.
+```{r, message=FALSE, warning=FALSE}
+mut_p = readRDS("../data/example/mut_p_marc1.rds")
+sim_data = simulate_sc_data_mod2(type_graph, mut_p = mut_p, sample_size = 100)
+```
+
+The results involve the cell phylogeny `sim_data$tr`, the lineage barcodes `sim_data$sc`, and the sampled population size for each progenitor states `sim_data$true_sampled_sizes`. The barcodes and phylogeny can be visualized below. The rownames of the lineage barcode character matrix indicates the cell type of each cell.
+```{r}
+plot_barcodes(sc_mat = sim_data$sc,
+              tr = sim_data$tr,
+              tip_celltype = get_type_from_id(rownames(sim_data$sc)),
+              celltype_col = col_vec)
+```
+
+
+For a detailed specifications of fate maps and mutation parameters, see below.
+
+### Quantitative fate maps specifications
+
+Quantitative fate maps are implemented as the 'type_graph' S3 objects, with the following attributes.
+
+1. **'node_id'**: progenitor states. Progenitor states are represented by positive integers.
+2. **'root-id'**: root state. Root state is one of the progenitor states represented by the largest positive integer.
+2. **'tip_id'**: terminal types. Terminal types are represented by negative integers.
+3. **'merge'**: list of daughter state(s)/type(s) for each progenitor state.
+4. **'diff_time'**: time of progenitor state commitments. Terminal types have infinite time of commitment.
+5. **'diff_mode_probs'**: commitment bias of progenitor states. Values corresponds to three modes of commitments: symmetric to downstream state X (first element in 'merge'), symmetric to downstream states Y (second element in 'merge') and assymetric commitment.
+6. **'lifetime'**: the doubling time of cells of each state/type.
+7. **'founder_size'**: the number of cell(s) of the root state at time zero.
+8. **'target_time'**: time of sample collection.
+9. **'prob_loss'**: cell death probabilities for each state/type.
+10. **'prob_pm'**: non-doubling proabilities for each state/type.
+11. **'edges'**: edge list. This can be derived from the information above.
+12. **'root_time'**: time until first commitment event of the root state.
+
+### Mutagenesis parameters specifications
+
+mutatgenesis parameters are implemented as 'mut_params' S3 objects, and have the following attributes.
+
+Suppose the array of barcoding sites have $J$ total elements.
+
+1. **'mut_rate'**: A vector of length $J$, that is the mutation rate of the sites.
+2. **'recur_prob'**': A vector of length $J$, deprecatad parameter, always set to a vector of ones.
+3. **'active time'**': A list of range of intervals for which barcoding is active.
+4. **'recur_vec_list'**: A list of allele emergence probabilities of length $J$, each item in the list is a named vector probabilities that sum to $1$. The names are the mutant allele names.

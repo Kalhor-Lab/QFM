@@ -445,9 +445,9 @@ cell_mat_g2_fil = readRDS("./intermediate_data/iPSC/cell_mat_g2_filtered.rds")
 tip_map = as.character((-1):(-6))
 names(tip_map) = paste0("T", 1:6)
 
-source("R_mod/plotting.R")
-source("R_mod/im_ch.R")
-source("R_mod/ice_fase_mod1.R")
+# source("R_mod/plotting.R")
+# source("R_mod/im_ch.R")
+# source("R_mod/ice_fase_mod1.R")
 cell_mat_g1_im = im_chr(cell_mat_g1_fil)
 cell_mat_g2_im = im_chr(cell_mat_g2_fil)
 

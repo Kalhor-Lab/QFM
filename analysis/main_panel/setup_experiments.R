@@ -1,6 +1,6 @@
 # setting up experiment and hgRNA sets
 library(qfm)
-source("./analysis/MARC1/load_MARC1_data.R")
+source("./analysis/MARC1_estimation/load_MARC1_data.R")
 
 # large set of barcoding sites
 set.seed(73)

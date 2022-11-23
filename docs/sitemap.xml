@@ -1,22 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>/404.html</loc>
+    <loc>/authors.html</loc>
   </url>
   <url>
     <loc>/LICENSE-text.html</loc>
   </url>
   <url>
-    <loc>/articles/basic_tutorial.html</loc>
+    <loc>/404.html</loc>
   </url>
   <url>
-    <loc>/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>/authors.html</loc>
-  </url>
-  <url>
-    <loc>/index.html</loc>
+    <loc>/reference/index.html</loc>
   </url>
   <url>
     <loc>/reference/add_edge_length.html</loc>
@@ -119,9 +113,6 @@
   </url>
   <url>
     <loc>/reference/impute_characters.html</loc>
-  </url>
-  <url>
-    <loc>/reference/index.html</loc>
   </url>
   <url>
     <loc>/reference/init_mut_counts_list.html</loc>
@@ -239,5 +230,20 @@
   </url>
   <url>
     <loc>/reference/white_col_mapper.html</loc>
+  </url>
+  <url>
+    <loc>/articles/index.html</loc>
+  </url>
+  <url>
+    <loc>/articles/basic_tutorial.html</loc>
+  </url>
+  <url>
+    <loc>/articles/operations.html</loc>
+  </url>
+  <url>
+    <loc>/articles/simulate_phylogeny_and_barcodes.html</loc>
+  </url>
+  <url>
+    <loc>/index.html</loc>
   </url>
 </urlset>

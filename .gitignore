@@ -5,8 +5,8 @@ data/iPSC/
 data/MARC1/
 supplementary_data/
 v_docs/
-*.rds
-*.rda
+beta/
+beta_plots/
 
 # History files
 .Rhistory
