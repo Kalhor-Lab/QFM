@@ -15,8 +15,11 @@ BiocManager::install("ComplexHeatmap")
 devtools::install_github("Kalhor-Lab/QFM")
 ```
 
-For a basic tutorial, check out the vignette:
+Tutorial for fate map reconstruction:
 https://kalhor-lab.github.io/QFM/articles/basic_tutorial.html
+
+Tutorial for simulating cell phylogeny and lineage barcodes:
+https://kalhor-lab.github.io/QFM/articles/simulate_phylogeny_and_barcodes.html
 
 To reproduce results in manuscript: Check 'analysis/' folder.
 
