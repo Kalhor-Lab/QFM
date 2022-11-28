@@ -32,5 +32,5 @@ Or open a new issue on this Github page
 Corresponding authors:
 Reza Kalhor, Hongkai Ji
 
-Preprint:
-https://biorxiv.org/cgi/content/short/2022.02.13.480215v1
+## Citation
+Fang, Weixiang, et al. "Quantitative fate mapping: A general framework for analyzing progenitor state dynamics via retrospective lineage barcoding." Cell 185.24 (2022): 4604-4620.
