@@ -7,7 +7,6 @@ if (!require("devtools"))
 
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-BiocManager::install(version = "3.14")
 
 # install dependencies from Bioconductor
 BiocManager::install("ComplexHeatmap")
