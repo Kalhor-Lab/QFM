@@ -168,7 +168,7 @@ gr_color_v1 <- function (gr, jitter_amount = 2, neg = F)
         col = colorspace::hex(colorspace::RGB(gr_embed))
         col
 }
-plot_gr_clean <- function(gr, gr_node_time = NULL, total_time = NULL,
+plot_topology <- function(gr, gr_node_time = NULL, total_time = NULL,
                           type_col = NULL, node_label = NULL,
                           edge_col = NULL,
                           node_size = 3, edge_width = 0.5,
@@ -265,68 +265,8 @@ plot_gr_clean <- function(gr, gr_node_time = NULL, total_time = NULL,
                 )
         g_out
 }
-plot_gr <- function(gr,
-                    gr_node_time = NULL,
-                    total_time = NULL,
-                    type_col = NULL,
-                    node_label = NULL) {
-        ig_gr = as.igraph(gr)
-        if (is.null(gr_node_time)) {
-                gr_node_time = node.depth.edgelength(gr)
-                names(gr_node_time) = c(gr$tip.label, gr$node.label)
-                V(ig_gr)$Time = gr_node_time[V(ig_gr)$name]
-        }
-        V(ig_gr)$Time = gr_node_time[V(ig_gr)$name]
-        if (is.null(total_time)) {
-                total_time = max(gr_node_time)
-        }
-
-        # V(ig_gr)$Type = V(ig_gr)$name
-        if (!is.null(node_label)) {
-                V(ig_gr)$node_label = node_label[V(ig_gr)$name]
-        } else {
-                V(ig_gr)$node_label = V(ig_gr)$name
-        }
-        # V(ig_gr)$node_label = rep("", length(V(ig_gr)$name))
-        if (is.null(type_col)) {
-                type_col = gr_color_v1(gr)
-        }
-        g_out = ggraph(ig_gr, layout = 'dendrogram', height = Time) +
-                geom_edge_bend(
-                        aes(width = factor(1),
-                            fontface = 'plain'),
-                        arrow = arrow(
-                                type = "closed",
-                                length = unit(2, "pt"),
-                                angle = 45
-                        ),
-                        start_cap = circle(5, 'pt'),
-                        end_cap = circle(5, 'pt')
-                ) +
-                geom_node_label(aes(
-                        label = node_label,
-                        fill = name,
-                        size = factor(1)
-                ),
-                label.padding = unit(6, 'pt'))
-        g_out = g_out +
-                scale_fill_manual(values = type_col) +
-                ylim(c(total_time, 0)) + ylab('Time') +
-                scale_edge_width_manual(values = 0.5, guide = "none") +
-                scale_size_manual(values = 4, guide = "none") +
-                theme(
-                        axis.line.y = element_line(),
-                        axis.ticks.y = element_line(),
-                        axis.text.y = element_text(size = 12),
-                        axis.title = element_text(size = 12),
-                        panel.background = element_rect(fill = NA, color = NA, size = 10),
-                        legend.position = 'none',
-                        axis.title.x = element_blank(),
-                        text = element_text(size = 12)
-                )
-        g_out
-}
-
+# alias
+plot_gr_clean <- plot_topology
 plot_gr_dendro <- function(gr, gr_node_time, type_col, total_time, node_size = 3, gr_node_cat = NULL, plot_node_point = T) {
         ig_gr = as.igraph(gr)
         # gr_node_time = node.depth.edgelength(gr)
@@ -379,7 +319,6 @@ plot_gr_dendro <- function(gr, gr_node_time, type_col, total_time, node_size = 3
                 )
         g_out
 }
-
 plot_tr <- function(tr,
                     node_types = NULL,
                     root_time = 0.0,
@@ -387,9 +326,9 @@ plot_tr <- function(tr,
                     total_time = NULL,
                     node_size = 0.75,
                     edge_alpha = 0.5,
-                    end_alpha_terminal = 0.25,
+                    end_alpha_terminal = 0.05,
                     edge_width = 0.2,
-                    edge_width_terminal = 0.05,
+                    edge_width_terminal = 0.02,
                     ylim = c(total_time, 0),
                     jitter_tip = F
                     ) {
@@ -433,5 +372,4 @@ plot_tr <- function(tr,
                 ylim(ylim) + ylab("")
         g_out + g_theme
 }
-# plot_tr
 

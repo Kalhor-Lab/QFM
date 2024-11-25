@@ -8,8 +8,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-
-```{r setup, message=F, include=FALSE}
+```{r setup, message=F, warning=F, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(qfm)
 ```
@@ -18,11 +17,28 @@ library(qfm)
 
 In this example, we demonstrate quantitative fate mapping on lineage barcode data measured with cell types. First, we apply Phylotime to reconstruct time-scaled phylogeny from lineage barcodes. Second, ICE-FASE is applied to extract parameters of progenitor population dynamics, including commitment times, progenitor population sizes and commitment biases.
 
+We start with a character matrix, the example data is in the format below. An cell id is required, and is provided in the first column.
+
 ```{r, message=FALSE}
 # read mutant allele matrix
-cell_allele_table = readr::read_csv("../data/example/mutant_allele_matrix.csv")
+cell_allele_table = readr::read_csv("../data/example/mutant_allele_matrix_with_missing.csv")
 cell_allele_table[1:5]
 ```
+
+First, we convert the table to a character matrix
+```{r}
+chr_mat = as.matrix(cell_allele_table[-1])
+rownames(chr_mat) = cell_allele_table$cell
+```
+
+### Imputing missing data
+
+Generally, mutation matrix contains missing data. We will use `impute_characeters` to impute the missing data.
+```{r}
+chr_mat_imputed = impute_characters(chr_mat, nrounds = 100)
+```
+
+
 
 ### Running Phylotime
 The input to Phylotime is a character matrix, with rows corresponding to cells and columns corresponding to barcoding sites, tibble / data.frame are convert to a character matrix. The matrix needs to have rownames, which will be used as the names of the cells.
@@ -36,44 +52,57 @@ By default, Phylotime uses future to parallel pairwise distance estimations, use
 In this example, barcoding activates at 0.6 days, and samples are collected at 15 days.
 
 ```{r}
-chr_mat = as.matrix(cell_allele_table[-c(1:2)])
-rownames(chr_mat) = cell_allele_table$cell
-
 library(furrr)
 plan(multisession, workers = 8)
-tr = phylotime(chr_mat[, 1:50], t_total = 15. - 0.6)
+tr = phylotime(chr_mat_imputed, t_total = 15. - 0.6)
+```
+
+If mutation rate or allele emergence probabilities are known a priori, they can be provided to phylotime
+```{r,  message=F}
+mut_rate_tb = read_csv("../data/example/mut_p_mut_rate.csv")
+mut_rate_tb
+```
+
+```{r,  message=F}
+allele_prob_tb = read_csv("../data/example/mut_p_recur_vec.csv")
+allele_prob_tb
+```
+
+```{r}
+tr = phylotime(chr_mat_imputed,
+               mut_rate = mut_rate_tb$rate,
+               recur_vec = make_recur_vec_list(allele_prob_tb),
+               t_total = 15. - 0.6)
 ```
 
 Now to visualize the reconstructed tree with the lineage barcodes:
 ```{r, fig.width=8, fig.height=5}
-plot_barcodes(chr_mat[, 1:50], tr, show_column_names = F)
+plot_barcodes(chr_mat, tr, show_column_names = F)
 ```
 
 To plot the reconstrcuted tree only:
 ```{r, fig.width=10, fig.height=5}
-plot_tr(tr,
-        end_alpha_terminal = 0.05,
-        edge_width_terminal = 0.02)
+plot_tr(tr)
 ```
 
 ### Running ICE-FASE
 Next, to apply ICE-FASE, we need, in additional, the terminal cell state classifications. This is provided as a named vector, where the name correspond to cell names. We can visualzie the tree with terminal cell states:
-```{r, fig.width=8, fig.height=5}
-sc_celltypes = cell_allele_table$type
-names(sc_celltypes) = cell_allele_table$cell
-print(sc_celltypes[1:10])
+```{r, message=F, fig.width=8, fig.height=5}
+cell_type_tb = read_csv("../data/example/cell_type.csv")
+sc_celltypes = cell_type_tb$type
+names(sc_celltypes) = cell_type_tb$cell
 plot_barcodes(chr_mat[, 1:50], tr, tip_celltype = sc_celltypes, show_column_names = F)
 ```
 
 To run ICE-FASE:  ('root_time' is the time until barcode activation.)
 ```{r}
-res = ice_fase_mod(tr, sc_celltypes, total_time = 15 - 0.6, root_time = 0.6)
+res = ice_fase(tr, sc_celltypes, total_time = 15 - 0.6, root_time = 0.6)
 ```
 
 ### ICE-FASE results
 With ICE-FASE fitted, a number of progenitor states are identified as nodes in the fate map topology. We can plot the reconstructed fate map topology with commitment times now. Note that the inferred progenitor states (iP) are denoted as "Node-x" below.
 ```{r, fig.width=10, fig.height=5}
-plot_gr_clean(gr = res$gr,
+plot_topology(gr = res$gr,
               total_time = 15,
               gr_node_time = res$gr_trans_time,
               type_col = res$col_pal,
@@ -84,12 +113,10 @@ To visualize the internal node state assignment in reconstructed phylogeny:
 ```{r, fig.width=10, fig.height=5}
 plot_tr(res$tr,
         node_types = res$tr_node_assign,
-        type_col = res$col_pal,
-        end_alpha_terminal = 0.05,
-        edge_width_terminal = 0.02)
+        type_col = res$col_pal)
 ```
 To visualize distribution of Inferred Commitment Event (ICE) times:
-```{r, fig.width=8, fig.height=5}
+```{r, fig.width=8, fig.height=5, warning=FALSE}
 plot_ice_times(res)
 ```
 

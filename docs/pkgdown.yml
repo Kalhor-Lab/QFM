@@ -1,9 +1,8 @@
-pandoc: 2.19.2
-pkgdown: 2.0.6
+pandoc: '3.2'
+pkgdown: 2.1.0
 pkgdown_sha: ~
 articles:
   basic_tutorial: basic_tutorial.html
   operations: operations.html
   simulate_phylogeny_and_barcodes: simulate_phylogeny_and_barcodes.html
-last_built: 2022-11-23T19:27Z
-
+last_built: 2024-11-25T18:57Z
