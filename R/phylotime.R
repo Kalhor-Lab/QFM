@@ -133,7 +133,8 @@ phylotime <- function(chr_mat, t_total = 1,
         if (!is.null(recur_vec)) {
                 assertthat::assert_that(length(recur_vec) == ncol(chr_mat))
                 for (j in 1:length(recur_vec)) {
-                        assertthat::assert_that(all(chr_mat[, j] %in% c("0", names(recur_vec[[j]]))))
+                        chr_vec = chr_mat[, j]
+                        assertthat::assert_that(all(chr_vec[!is.na(chr_vec)] %in% c("0", names(recur_vec[[j]]))))
                 }
                 mut_p$recur_vec_list = recur_vec
         }
